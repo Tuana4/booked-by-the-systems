@@ -1,23 +1,44 @@
-<!DOCTYPE html>
+<!-- /index.html -->
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device‑width, initial‑scale=1.0">
+  <meta charset="utf-8" />
   <title>BOOKED BY THE SYSTEMS — THE BOX FILES YOU</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- IBM Plex Sans for brutalist sans (Futura-like vibe) -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="cursor‑halo"></div>
-  <div class="container">
-    <h1 class="title">BOOKED BY THE SYSTEMS — THE BOX FILES YOU</h1>
-    <h2 class="subtitle">TO PROCEED, AGREE.</h2>
-    <div id="checkboxes">
-      <label class="checkbox‑label">
-        <input type="checkbox" class="consent‑checkbox" />
-        I agree
-      </label>
+  <!-- Background grid -->
+  <div class="grid" aria-hidden="true"></div>
+  <!-- Red flash overlay -->
+  <div id="flash" aria-hidden="true"></div>
+  <!-- Floating system words layer -->
+  <div id="system-words" aria-live="off" aria-hidden="true"></div>
+
+  <main id="app" role="main">
+    <header>
+      <h1 class="title">BOOKED BY THE SYSTEMS — THE BOX FILES YOU</h1>
+      <p class="subtitle">“to proceed, agree.”</p>
+    </header>
+
+    <section id="form" aria-label="Agreement form">
+      <div id="checks" class="checks" role="group" aria-describedby="desc"></div>
+      <p id="desc" class="sr">Each agreement locks and cannot be undone. New statements will appear below sequentially.</p>
+    </section>
+  </main>
+
+  <!-- End screen -->
+  <div id="end" class="end hidden" role="dialog" aria-modal="true" aria-live="assertive">
+    <div class="end-inner">
+      <p class="end-text">you shouldn’t have agreed to something you never read<span class="blink">_</span></p>
     </div>
   </div>
+
+  <!-- Custom cursor halo -->
+  <div id="cursor" aria-hidden="true"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
