@@ -1,58 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device‑width, initial‑scale=1.0">
   <title>BOOKED BY THE SYSTEMS — THE BOX FILES YOU</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- overlays -->
-  <div class="overlay scan"></div>
-  <div class="overlay noise"></div>
-  <div id="flash"></div>
-
-  <!-- custom cursor -->
-  <div id="cursor" class="cursor"><div class="ring"></div><div class="dot"></div></div>
-
-  <!-- header (mirrors poster) -->
-  <header class="meta">
-    <span class="tag">SYSTEM FORM 009</span>
-    <span>DEPARTMENT OF BOXING & CLASSIFICATION • REF: BOX-214 • LAST UPDATED <span id="ts">00:00</span></span>
-    <span class="barcode">|| | |||| | || ||| |</span>
-  </header>
-
-  <main class="wrap">
-    <!-- SCREEN 1: live system -->
-    <section id="s1" class="screen active">
-      <h1 class="title">
-        <span class="big">BOOKED BY THE SYSTEMS</span>
-        <span class="sub">THE BOX FILES YOU</span>
-      </h1>
-      <p class="lead">to proceed, agree.</p>
-
-      <section class="field" aria-live="polite">
-        <div id="grid" class="grid" style="--gx:22px; --gy:22px"></div>
-        <div id="stack" class="stack"></div>
-      </section>
-
-      <p class="fine">submission not required • consent assumed</p>
-    </section>
-
-    <!-- SCREEN 2: archived -->
-    <section id="s2" class="screen">
-      <div class="endwrap">
-        <div class="stamp">ARCHIVED</div>
-        <h2 class="endline">your participation has been archived.</h2>
-        <p class="note">BOX ID: 214 • SYSTEM STATUS: ACTIVE</p>
-        <p class="note dim">you shouldn’t have agreed to something you never read.</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- footer micro -->
-  <footer class="legal">Data archived indefinitely. Participation is automatic. Consent assumed.</footer>
-
+  <div id="cursor‑halo"></div>
+  <div class="container">
+    <h1 class="title">BOOKED BY THE SYSTEMS — THE BOX FILES YOU</h1>
+    <h2 class="subtitle">TO PROCEED, AGREE.</h2>
+    <div id="checkboxes">
+      <label class="checkbox‑label">
+        <input type="checkbox" class="consent‑checkbox" />
+        I agree
+      </label>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
