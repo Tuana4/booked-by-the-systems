@@ -1,36 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BOOKED BY THE SYSTEMS</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BOOKED BY THE SYSTEMS — THE BOX FILES YOU</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="system">
-    <!-- SCREEN 1 -->
-    <div id="screen1" class="screen active">
-      <h1>BOOKED BY THE SYSTEMS<br>THE BOX FILES YOU</h1>
-      <p class="subtitle">to proceed, agree.</p>
-      <button id="agreeBtn">I agree</button>
-    </div>
+  <!-- poster → site handoff -->
+  <div class="handoff">CONTINUE HERE ↑ <span class="hint">you came from the form</span></div>
 
-    <!-- SCREEN 2 -->
-    <div id="screen2" class="screen">
-      <div id="formArea">
-        <p>☑️ I agree</p>
-      </div>
-      <p class="fine">submission not required • consent assumed</p>
-    </div>
-
-    <!-- SCREEN 3 -->
-    <div id="screen3" class="screen">
-      <h2>YOUR PARTICIPATION HAS BEEN ARCHIVED.</h2>
-      <p>BOX ID: 214<br>SYSTEM STATUS: ACTIVE<br>YOU WERE NEVER OUTSIDE THE BOX.</p>
-      <span class="blink">▌</span>
-    </div>
+  <!-- micro header to match poster -->
+  <div class="meta">
+    <span class="tag">SYSTEM FORM 009</span>
+    <span>DEPARTMENT OF BOXING & CLASSIFICATION • REF: BOX-214 • LAST UPDATED <span id="ts">00:00</span></span>
+    <span class="barcode">|| | |||| | || ||| |</span>
   </div>
+
+  <!-- overlays -->
+  <div class="overlay scan"></div>
+  <div class="overlay noise"></div>
+
+  <!-- custom red cursor -->
+  <div class="cursor" id="cursor"></div>
+
+  <div class="wrap">
+    <!-- SCREEN 1: LIVE SYSTEM (mirrors poster title stack) -->
+    <section id="s1" class="screen active">
+      <h1 class="title">
+        <span class="big">BOOKED BY THE SYSTEMS</span>
+        <span class="sub">THE BOX FILES YOU</span>
+      </h1>
+      <p class="lead">to proceed, move.</p>
+
+      <div class="field" id="field">
+        <div class="grid" id="grid" style="--gx:22px; --gy:22px"></div>
+        <!-- phrases appear here -->
+      </div>
+
+      <p class="fine" id="fine">submission not required • consent assumed</p>
+    </section>
+
+    <!-- SCREEN 2: ARCHIVED (same tone as poster fine print) -->
+    <section id="s2" class="screen">
+      <div>
+        <div class="stamp">ARCHIVED</div>
+        <h2 class="end">YOUR PARTICIPATION HAS BEEN ARCHIVED.</h2>
+        <p class="note">BOX ID: 214 • SYSTEM STATUS: ACTIVE</p>
+        <p class="note" style="opacity:.65">YOU WERE NEVER OUTSIDE THE BOX</p>
+        <button class="btn" id="restart">REBOOK YOURSELF</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- footer fine print to match the poster bottom edge -->
+  <div class="legal">Data archived indefinitely. Participation is automatic. Consent assumed.</div>
+
   <script src="script.js"></script>
 </body>
 </html>
-
