@@ -1,82 +1,132 @@
-// timestamp
+
+// time in header
 const ts = document.getElementById('ts');
 ts.textContent = new Date().toTimeString().slice(0,5);
 
-const s1 = document.getElementById('s1');
-const s2 = document.getElementById('s2');
-const field = document.getElementById('field');
-const grid  = document.getElementById('grid');
+// elements
 const cursor = document.getElementById('cursor');
+const grid   = document.getElementById('grid');
+const stack  = document.getElementById('stack');
+const flash  = document.getElementById('flash');
+const s1     = document.getElementById('s1');
+const s2     = document.getElementById('s2');
 
-// poster-voice messages
-const lines = [
-  "consent recorded","trace detected","filing in progress",
-  "agreement implied","visibility confirmed","delay archived",
-  "category applied","status: active participant","loop continues",
-  "system holds you","error 214-a","form expired but processing"
-];
-
-let dist = 0, lastX = null, lastY = null, phraseI = 0, archived = false;
-
-// custom cursor + movement tracking
+// custom cursor (desktop)
 window.addEventListener('pointermove', (e)=>{
   cursor.style.left = e.clientX + 'px';
   cursor.style.top  = e.clientY + 'px';
-
-  if(lastX !== null){
-    const dx = e.clientX - lastX, dy = e.clientY - lastY;
-    dist += Math.hypot(dx, dy);
-    progress(dist);
-    if (Math.random()>.84) trace(e.clientX, e.clientY);
-  }
-  lastX = e.clientX; lastY = e.clientY;
 });
 
-function progress(d){
-  // compress grid (the box tightens)
-  const base=22, tight=9;
-  const pct = Math.min(1, d/2400); // lower = faster archive
-  const size = base - (base-tight)*pct;
-  grid.style.setProperty('--gx', size+'px');
-  grid.style.setProperty('--gy', size+'px');
-  grid.style.opacity = 0.22 + pct*0.2;
+// consent lines (each new one appears BELOW)
+const lines = [
+  "I agree",
+  "I still agree",
+  "I continue to agree",
+  "I agree again (for clarity)",
+  "I agree to being archived",
+  "I agree without reading",
+  "I agree because it’s easier"
+];
 
-  // spawn phrases
-  if (Math.random() < 0.22 + pct*0.4) spawnPhrase();
+// poetic system whispers
+const whispers = [
+  "consent recorded","trace detected","filing in progress",
+  "agreement stored","214 — active","visibility confirmed",
+  "form expired but processing","data syncing..."
+];
 
-  if (pct > .85) document.body.classList.add('decay');
-  if (!archived && pct >= 1) archive();
+let agreedCount = 0;
+
+// build first row
+addRow(lines[0]);
+
+function addRow(text){
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.setAttribute('role','group');
+
+  const box = document.createElement('div');
+  box.className = 'box';
+  box.setAttribute('aria-label', text);
+  box.setAttribute('tabindex','0');
+
+  const tick = document.createElement('div');
+  tick.className = 'tick';
+  tick.textContent = "✓";
+  box.appendChild(tick);
+
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.textContent = text;
+
+  row.appendChild(box);
+  row.appendChild(label);
+
+  const activate = () => {
+    if (row.classList.contains('checked')) return;
+    row.classList.add('checked');
+    agreedCount++;
+
+    ping();         // red flash
+    floatGhost();   // rising system text
+    compressGrid(); // boxes tighten
+
+    if (agreedCount < lines.length){
+      addRow(lines[agreedCount]);   // append NEXT row below
+      stack.scrollTop = stack.scrollHeight; // auto-scroll down
+    } else {
+      endSequence(); // collapse
+    }
+  };
+
+  // click + keyboard
+  box.addEventListener('click', activate);
+  label.addEventListener('click', activate);
+  box.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); activate(); }
+  });
+
+  stack.appendChild(row);
 }
 
-function spawnPhrase(){
-  const p = document.createElement('div');
-  p.className = 'phrase' + (Math.random()>.75 ? ' red':'');
-  p.textContent = lines[phraseI % lines.length];
-  phraseI++;
-  const rect = field.getBoundingClientRect();
-  const x = rect.left + 40 + Math.random()*(rect.width-120);
-  const y = rect.top  + 20 + Math.random()*(rect.height-80);
-  p.style.left = x+'px'; p.style.top = y+'px';
-  p.style.setProperty('--r', (Math.random()*8-4)+'deg');
-  document.body.appendChild(p);
-  setTimeout(()=>p.remove(), 1300);
-  if (navigator.vibrate && Math.random()>.85) navigator.vibrate(8);
+function ping(){
+  flash.classList.add('flash');
+  setTimeout(()=> flash.classList.remove('flash'), 200);
 }
 
-function trace(x,y){
-  const t = document.createElement('div');
-  t.className='trace'; t.style.left=x+'px'; t.style.top=y+'px';
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 600);
+function floatGhost(){
+  const g = document.createElement('div');
+  g.className = 'ghost' + (Math.random()>.78 ? ' red' : '');
+  g.textContent = whispers[Math.floor(Math.random()*whispers.length)];
+
+  const rect = stack.getBoundingClientRect();
+  const x = rect.left + 20 + Math.random()*(rect.width-140);
+  const y = rect.top  + 10 + Math.random()*(rect.height-60);
+  g.style.left = x + 'px';
+  g.style.top  = y + 'px';
+  g.style.setProperty('--r', (Math.random()*10-5) + 'deg');
+
+  document.body.appendChild(g);
+  setTimeout(()=> g.remove(), 1300);
 }
 
-function archive(){
-  archived = true;
+function compressGrid(){
+  const base = 22, tight = 9;
+  const pct = Math.min(1, agreedCount / (lines.length)); // 0..1
+  const size = base - (base - tight) * (0.25 + pct*0.75);
+  grid.style.setProperty('--gx', size + 'px');
+  grid.style.setProperty('--gy', size + 'px');
+  if (pct > .6) document.body.classList.add('decay');
+}
+
+function endSequence(){
+  // cinematic lock → flash → archive screen
   setTimeout(()=>{
-    s1.classList.remove('active');
-    s2.classList.add('active');
-    document.title = 'archived — BOOKED BY THE SYSTEMS';
-  }, 220);
+    flash.classList.add('flash');
+    setTimeout(()=>{
+      s1.classList.remove('active');
+      s2.classList.add('active');
+      document.title = 'archived — BOOKED BY THE SYSTEMS';
+    }, 160);
+  }, 320);
 }
-
-document.getElementById('restart').addEventListener('click', ()=> location.reload());
