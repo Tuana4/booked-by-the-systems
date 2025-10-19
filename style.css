@@ -1,140 +1,209 @@
-/* Reset & base */
-* {
-  margin: 0;
-  padding: 0;
-  box‑sizing: border‑box;
+/* /style.css */
+:root{
+  --bg: #000;
+  --fg: #fff;
+  --red: #e10600;
+  --muted: #888;
+  --grid-size: 48px;          /* tightened on each tick */
+  --grid-line: 1px;
+  --halo-size: 28px;
+  --halo-blur: 18px;
+  --pad: clamp(16px, 3vw, 40px);
 }
-html, body {
-  height: 100%;
-  width: 100%;
-  background: #000;
-  color: #fff;
-  font‑family: 'IBM Plex Sans', 'Futura', sans‑serif;
-  text-transform: uppercase;
-  overflow: hidden;
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--fg);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  overflow:hidden; /* exhibition mode */
+  cursor:none; /* custom halo */
 }
-body {
-  position: relative;
+
+.sr{position:absolute;left:-9999px}
+
+#app{
+  position:relative;
+  height:100%;
+  padding:var(--pad);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
 }
+
+header{margin-bottom:clamp(24px,6vh,72px)}
+.title{
+  font-weight:700;
+  line-height:1.05;
+  font-size:clamp(22px,4.2vw,54px);
+  max-width:22ch;
+  text-wrap:balance;
+}
+.subtitle{
+  color:var(--fg);
+  opacity:.9;
+  font-weight:600;
+  margin:8px 0 0;
+  font-size:clamp(12px,1.6vw,16px);
+}
+
+.checks{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(10px,1.4vh,16px);
+  max-width:min(720px,90vw);
+}
+
+/* Brutalist checkbox rows */
+.row{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:14px 16px;
+  border:2px solid var(--fg);
+  background:rgba(0,0,0,.35);
+  transition:transform .12s ease;
+}
+.row:not(.locked):hover{transform:translateY(-2px)}
+.row.locked{border-color:var(--red)}
+
+input[type="checkbox"]{
+  appearance:none;
+  width:28px;height:28px;
+  border:2px solid var(--fg);
+  background:transparent;
+  display:grid;place-items:center;
+  flex:none;
+}
+input[type="checkbox"]:checked{
+  border-color:var(--red);
+  background:var(--red);
+}
+input[type="checkbox"]:disabled{ /* why: visual lock */
+  outline:none;opacity:1;cursor:not-allowed;
+}
+
+.label{
+  flex:1;
+  font-size:clamp(14px,2.2vw,22px);
+  line-height:1.2;
+  user-select:none;
+}
+
+/* Background grid */
+.grid{
+  position:fixed;inset:0;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.06), rgba(255,255,255,.06) var(--grid-line), transparent var(--grid-line), transparent var(--grid-size)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.06) var(--grid-line), transparent var(--grid-line), transparent var(--grid-size));
+  pointer-events:none;
+  transition:background-size .4s cubic-bezier(.2,.7,.1,1);
+  will-change:background-size;
+}
+
+/* Tighten pulse per tick */
+.grid.tighten{
+  animation:tighten .55s cubic-bezier(.2,.7,.1,1) 1;
+}
+@keyframes tighten{
+  0%{background-size:var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size)}
+  50%{background-size:calc(var(--grid-size)*.6) calc(var(--grid-size)*.6), calc(var(--grid-size)*.6) calc(var(--grid-size)*.6)}
+  100%{background-size:var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size)}
+}
+
+/* Red flash */
+#flash{
+  position:fixed;inset:0;
+  background:radial-gradient(circle at 50% 50%, rgba(225,6,0,.25), rgba(225,6,0,.45));
+  opacity:0;pointer-events:none;
+}
+#flash.active{animation:flashRed .22s ease 1}
+@keyframes flashRed{
+  0%{opacity:0}
+  25%{opacity:1}
+  100%{opacity:0}
+}
+
+/* Floating words */
+#system-words{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.word{
+  position:absolute;
+  color:var(--fg);
+  mix-blend-mode:screen;
+  text-shadow:0 0 8px rgba(225,6,0,.45);
+  white-space:nowrap;
+  opacity:.9;
+  animation:floatUp linear forwards;
+}
+.word::before{ /* red accent bar */
+  content:"";
+  display:inline-block;width:10px;height:8px;margin-right:8px;background:var(--red);
+}
+@keyframes floatUp{
+  0%{transform:translateY(20px) scale(.98);opacity:0}
+  8%{opacity:1}
+  92%{opacity:1}
+  100%{transform:translateY(-120px) scale(1.02);opacity:0}
+}
+
+/* Glitch + noise */
+body.glitch #app{animation:glitchShake .6s steps(12) 1}
+@keyframes glitchShake{
+  0%{transform:translate(0,0)}
+  10%{transform:translate(-2px,1px)}
+  20%{transform:translate(2px,-2px)}
+  30%{transform:translate(-1px,2px)}
+  40%{transform:translate(3px,-1px)}
+  50%{transform:translate(-3px,1px)}
+  60%{transform:translate(2px,0)}
+  70%{transform:translate(-2px,-1px)}
+  80%{transform:translate(1px,1px)}
+  90%{transform:translate(-1px,-2px)}
+  100%{transform:translate(0,0)}
+}
+
+/* End blackout screen */
+.end{
+  position:fixed;inset:0;display:grid;place-items:center;
+  background:#000;opacity:0;pointer-events:none;
+  transition:opacity .8s ease;
+}
+.end .end-inner{padding:var(--pad)}
+.end .end-text{
+  color:#fff;
+  font-weight:700;
+  font-size:clamp(18px,3.8vw,42px);
+  text-align:center;
+  text-transform:none; /* why: tone shift */
+}
+.end .blink{
+  display:inline-block;width:1ch;
+  animation:blink 1s steps(2,end) infinite;
+}
+@keyframes blink{50%{opacity:0}}
+.end.show{opacity:1;pointer-events:auto}
+.hidden{display:none}
 
 /* Cursor halo */
-#cursor‑halo {
-  pointer‑events: none;
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255,0,0,0.3);
-  mix‑blend‑mode: difference;
-  transition: transform 0.1s ease;
-  transform: translate(-50%,-50%) scale(1);
+#cursor{
+  position:fixed;inset:auto;
+  width:var(--halo-size);height:var(--halo-size);
+  border-radius:50%;
+  box-shadow:0 0 var(--halo-blur) var(--red), inset 0 0 8px rgba(225,6,0,.8);
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  opacity:.9;
+  transition:opacity .6s ease;
+  mix-blend-mode:screen;
 }
+body.no-cursor #cursor{opacity:0}
 
-/* Container & typography */
-.container {
-  display: flex;
-  flex-direction: column;
-  align‑items: center;
-  justify‑content: center;
-  height: 100%;
-  padding: 20px;
-  text-align: center;
-}
-
-.title {
-  font-size: 3.5vw;
-  color: #fff;
-  margin-bottom: 1rem;
-}
-
-.subtitle {
-  font-size: 1.8vw;
-  color: #f00;
-  margin-bottom: 3rem;
-}
-
-.checkbox‑label {
-  display: block;
-  font-size: 1.5vw;
-  color: #fff;
-  margin: 10px 0;
-  cursor: pointer;
-}
-
-.checkbox‑label input[type="checkbox"] {
-  margin-right: 0.5vw;
-  width: 1.2vw;
-  height: 1.2vw;
-  vertical-align: middle;
-  accent‑color: #f00;
-}
-
-/* Grid animation overlay */
-.grid‑anim {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 200%;
-  height: 200%;
-  pointer‑events: none;
-  background: radial‑gradient(circle at center, transparent 60%, rgba(255,0,0,0.1) 61%), 
-              repeating‑linear‑gradient(0deg, rgba(255,0,0,0.05) 0px, rgba(255,0,0,0.05) 2px, transparent 2px, transparent 4px),
-              repeating‑linear‑gradient(90deg, rgba(255,0,0,0.05) 0px, rgba(255,0,0,0.05) 2px, transparent 2px, transparent 4px);
-  opacity: 0;
-  transform: scale(0);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-/* Flash effect */
-.flash‑red {
-  animation: flashAnim 0.15s ease;
-}
-@keyframes flashAnim {
-  0% { background‑color: #000; }
-  50% { background‑color: #300; }
-  100% { background‑color: #000; }
-}
-
-/* Final glitch & end screen */
-.end‑screen {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5vw;
-  text-align: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 1s ease 1s;
-}
-
-.end‑screen.active {
-  pointer‑events: all;
-  opacity: 1;
-}
-
-/* Blinking underscore */
-.end‑screen .underscore {
-  display: inline-block;
-  width: 0.5em;
-  background‑color: #fff;
-  margin‑left: 0.3em;
-  animation: blinkUnderscore 1s step‑end infinite;
-}
-@keyframes blinkUnderscore {
-  50% { background‑color: transparent; }
-}
-
-/* Responsive tweaks */
-@media (max-width: 600px) {
-  .title { font-size: 6vw; }
-  .subtitle { font-size: 3.5vw; }
-  .checkbox‑label { font-size: 3vw; }
-  .checkbox‑label input[type="checkbox"] { width: 3vw; height: 3vw; }
+/* Responsive spacing */
+@media (min-width:1200px){
+  .title{font-size:62px}
+  .label{font-size:24px}
 }
