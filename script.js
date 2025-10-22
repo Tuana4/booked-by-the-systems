@@ -69,7 +69,7 @@ document.addEventListener("mouseout", updateHover);
       cb.checked = false;
       cb.disabled = false;     // re-arm for next agree
     } else {
-      // final: show end message then reload after 10s
+      // final: show end message then reload after 6s
       endScreen.classList.remove('hidden');
       setTimeout(() => location.reload(), 10000);
     }
