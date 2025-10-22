@@ -1,43 +1,66 @@
-<!-- /index.html -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>BOOKED BY THE SYSTEMS — THE BOX FILES YOU</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- IBM Plex Sans for brutalist sans (Futura-like vibe) -->
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <!-- Background grid -->
-  <div class="grid" aria-hidden="true"></div>
-  <!-- Red flash overlay -->
-  <div id="flash" aria-hidden="true"></div>
-  <!-- Floating system words layer -->
-  <div id="system-words" aria-live="off" aria-hidden="true"></div>
+  <!-- overlays -->
+  <div class="overlay scan"></div>
+  <div class="overlay noise"></div>
+  <div id="flash"></div>
 
-  <main id="app" role="main">
-    <header>
-      <h1 class="title">BOOKED BY THE SYSTEMS — THE BOX FILES YOU</h1>
-      <p class="subtitle">“to proceed, agree.”</p>
-    </header>
+  <!-- header -->
+  <header class="meta">
+    <span class="tag">SYSTEM FORM 009</span>
+    <span>DEPARTMENT OF BOXING & CLASSIFICATION • REF: BOX-214 • LAST UPDATED <span id="ts">00:00</span></span>
+    <span class="barcode">|| | |||| | || ||| |</span>
+  </header>
 
-    <section id="form" aria-label="Agreement form">
-      <div id="checks" class="checks" role="group" aria-describedby="desc"></div>
-      <p id="desc" class="sr">Each agreement locks and cannot be undone. New statements will appear below sequentially.</p>
+  <main class="wrap">
+    <!-- TITLE -->
+    <section class="mast">
+      <h1 class="title">
+        <span class="big">BOOKED BY THE SYSTEMS</span>
+        <span class="sub">THE BOX FILES YOU</span>
+      </h1>
+      <p class="lead">to proceed, agree.</p>
+    </section>
+
+    <!-- INTERACTIVE BOX (single checkbox that cycles phrases) -->
+    <section class="field" id="field" aria-live="polite">
+      <div id="box3d" class="box3d">
+        <form id="consent" class="consent">
+          <input type="checkbox" id="agree" />
+          <label id="agreeLabel" for="agree">I agree</label>
+        </form>
+      </div>
+
+      <!-- background words spawn here after first agree -->
+      <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
+
+      <!-- subtle grid -->
+      <div id="grid" class="grid" style="--gx:22px; --gy:22px"></div>
+    </section>
+
+    <!-- FOOT MICRO -->
+    <p class="fine footnote">submission not required • consent assumed</p>
+
+    <!-- END SCREEN -->
+    <section id="end" class="end hidden" aria-live="polite">
+      <div class="end-inner">
+        <div class="err">SYSTEM ERROR</div>
+        <div class="slash"></div>
+        <p class="mline">you shouldn’t have agreed to something you never read.</p>
+        <p class="restart">reloading…</p>
+      </div>
     </section>
   </main>
 
-  <!-- End screen -->
-  <div id="end" class="end hidden" role="dialog" aria-modal="true" aria-live="assertive">
-    <div class="end-inner">
-      <p class="end-text">you shouldn’t have agreed to something you never read<span class="blink">_</span></p>
-    </div>
-  </div>
-
-  <!-- Custom cursor halo -->
-  <div id="cursor" aria-hidden="true"></div>
+  <!-- footer line -->
+  <footer class="legal">Data archived indefinitely. Participation is automatic. Consent assumed.</footer>
 
   <script src="script.js"></script>
 </body>
