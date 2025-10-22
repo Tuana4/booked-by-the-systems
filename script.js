@@ -36,6 +36,21 @@ ghostLayer.style.zIndex = 1;
 cb.addEventListener('change', () => {
   if(!cb.checked) return;
 
+const cursor = document.getElementById("cursor");
+
+document.addEventListener("mousemove", e => {
+  cursor.style.left = e.clientX + "px";
+  cursor.style.top = e.clientY + "px";
+});
+
+function updateHover(e) {
+  const t = e.target;
+  const isInteractive = t.tagName === "INPUT" || t.tagName === "LABEL" || t.closest("label");
+  document.body.classList.toggle("interactive-hover", isInteractive);
+}
+document.addEventListener("mousemove", updateHover);
+document.addEventListener("mouseover", updateHover);
+document.addEventListener("mouseout", updateHover);
   // tiny red flash
   flash.classList.add('flash');
   setTimeout(() => flash.classList.remove('flash'), 200);
