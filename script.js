@@ -11,7 +11,7 @@ const phrases = [
   "I agree",
   "I still agree",
   "I continue to agree",
-  "I agree again (for clarity)",
+ 
   "I agree to being archived",
   "I agree without reading"
 ];
