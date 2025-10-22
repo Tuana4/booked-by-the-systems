@@ -1,150 +1,136 @@
-// /script.js
-(() => {
-  const phrases = [
-    "I agree",
-    "I still agree",
-    "I continue to agree",
-    "I agree again (for clarity)",
-    "I agree to being archived",
-    "I agree without reading",
-    "I agree because it’s easier"
-  ];
+// timestamp
+document.getElementById('ts').textContent = new Date().toTimeString().slice(0,5);
 
-  const systemWords = [
-    "consent recorded", "data syncing", "file archived",
-    "trace detected", "214—active", "node confirmed",
-    "packet sealed", "hash written", "audit queued",
-    "consent verified", "id matched", "session bound"
-  ];
+// elements
+const field     = document.getElementById('field');
+const box3d     = document.getElementById('box3d');
+const grid      = document.getElementById('grid');
+const ghostLayer= document.getElementById('ghostLayer');
+const flash     = document.getElementById('flash');
+const endScreen = document.getElementById('end');
 
-  const checksEl = document.getElementById("checks");
-  const gridEl = document.querySelector(".grid");
-  const flashEl = document.getElementById("flash");
-  const wordsLayer = document.getElementById("system-words");
-  const endEl = document.getElementById("end");
-  const cursorEl = document.getElementById("cursor");
+const cb        = document.getElementById('agree');
+const labelEl   = document.getElementById('agreeLabel');
 
-  let idx = 0;
-  let ended = false;
-  let mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
-  let halo = { x: mouse.x, y: mouse.y };
+// phrases for the center (one at a time)
+const phrases = [
+  "I agree",
+  "I still agree",
+  "I continue to agree",
+  "I agree again (for clarity)",
+  "I agree to being archived",
+  "I agree without reading"
+];
 
-  function addRow(text){
-    const row = document.createElement("label");
-    row.className = "row";
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.setAttribute("aria-label", text);
-    const span = document.createElement("span");
-    span.className = "label";
-    span.textContent = text;
+// background “system words”
+const whispers = [
+  "consent recorded","trace detected","filing in progress",
+  "agreement stored","214 — active","visibility confirmed",
+  "form expired but processing","data syncing..."
+];
 
-    cb.addEventListener("change", () => onTick(row, cb));
-    row.appendChild(cb);
-    row.appendChild(span);
-    checksEl.appendChild(row);
-    row.scrollIntoView({behavior:"smooth", block:"end"});
-    cb.focus({preventScroll:true});
+let idx = 0;             // which phrase is showing
+let startedGhosts = false;
+let ghostTimer = null;
+
+// ensure first phrase
+labelEl.textContent = phrases[idx];
+
+// 3D tilt on mouse move (subtle)
+field.addEventListener('pointermove', (e)=>{
+  const r = field.getBoundingClientRect();
+  const cx = r.left + r.width/2;
+  const cy = r.top  + r.height/2;
+  const dx = (e.clientX - cx) / (r.width/2);   // -1..1
+  const dy = (e.clientY - cy) / (r.height/2);
+  const max = 7; // degrees
+  box3d.style.transform = `rotateY(${dx*max}deg) rotateX(${-dy*max}deg)`;
+});
+field.addEventListener('pointerleave', ()=> box3d.style.transform = 'rotateY(0) rotateX(0)');
+
+// click / change the checkbox
+cb.addEventListener('change', ()=>{
+  if(!cb.checked) return;     // only act on checked
+  tickEffect();
+
+  // start the drifting background words after the first agree
+  if(!startedGhosts){
+    startedGhosts = true;
+    ghostTimer = setInterval(spawnGhost, 320);
   }
 
-  function onTick(row, cb){
-    if(!cb.checked){ cb.checked = true; return; } // why: disallow untick flicker
-    cb.disabled = true;
-    row.classList.add("locked");
-    impact();
+  // lock this “agree” briefly so it feels decisive
+  cb.disabled = true;
+
+  // progress the system grid
+  compressGrid();
+
+  // go to next phrase or crash
+  setTimeout(()=>{
     idx++;
-    if(idx < phrases.length){
-      // slight delay for rhythm
-      setTimeout(() => addRow(phrases[idx]), 220);
-    }else{
-      finalSequence();
+    if (idx < phrases.length){
+      labelEl.textContent = phrases[idx];
+      cb.checked = false;
+      cb.disabled = false; // ready for next click
+    } else {
+      // final click → crash sequence
+      triggerCrash();
     }
-  }
+  }, 240);
+});
 
-  function impact(){
-    flash();
-    tightenGrid();
-    spawnWords(randomInt(3,5));
-  }
+// red flash + micro “camera capture” feel
+function tickEffect(){
+  flash.classList.add('flash');
+  setTimeout(()=> flash.classList.remove('flash'), 200);
+}
 
-  function flash(){
-    flashEl.classList.remove("active");
-    // force reflow to restart animation
-    void flashEl.offsetWidth;
-    flashEl.classList.add("active");
-  }
+function compressGrid(){
+  const base = 22, tight = 9;
+  const pct  = Math.min(1, (idx+1) / phrases.length);
+  const size = base - (base - tight) * (0.25 + pct*0.75);
+  grid.style.setProperty('--gx', size + 'px');
+  grid.style.setProperty('--gy', size + 'px');
+  if (pct > .55) document.body.classList.add('decay');
+}
 
-  function tightenGrid(){
-    gridEl.classList.remove("tighten");
-    void gridEl.offsetWidth;
-    gridEl.classList.add("tighten");
-    // nudge base grid size smaller each time (persistent claustrophobia)
-    const cs = getComputedStyle(document.documentElement).getPropertyValue("--grid-size").trim();
-    const curr = parseFloat(cs);
-    const next = Math.max(18, curr - 4);
-    document.documentElement.style.setProperty("--grid-size", `${next}px`);
-  }
+// spawn a floating word in the background
+function spawnGhost(){
+  const g = document.createElement('div');
+  g.className = 'ghost' + (Math.random()>.78 ? ' red':'' );
+  g.textContent = whispers[Math.floor(Math.random()*whispers.length)];
 
-  function spawnWords(count){
-    for(let i=0;i<count;i++){
-      const w = document.createElement("div");
-      w.className = "word";
-      w.textContent = pick(systemWords);
-      const left = randomInt(4, 86);   // %
-      const top = randomInt(40, 86);   // start lower half
-      const size = randomInt(10, 18);  // vw-ish feel across devices
-      const dur = randomFloat(1.2, 2.2);
-      w.style.left = `${left}vw`;
-      w.style.top = `${top}vh`;
-      w.style.fontSize = `clamp(12px, ${size/3}vw, ${size}px)`;
-      w.style.animationDuration = `${dur}s`;
-      w.addEventListener("animationend", () => w.remove());
-      wordsLayer.appendChild(w);
-    }
-  }
+  const r = ghostLayer.getBoundingClientRect();
+  const padX = 40, padY = 30;
+  const x = Math.random()*(r.width - padX*2) + padX;
+  const y = Math.random()*(r.height - padY*2) + padY;
 
-  function finalSequence(){
-    if(ended) return;
-    ended = true;
-    document.body.classList.add("glitch");
-    // brief glitch, then blackout
-    setTimeout(() => {
-      document.body.classList.remove("glitch");
-      endEl.classList.remove("hidden");
-      requestAnimationFrame(() => endEl.classList.add("show"));
-      // lock all interactions and fade cursor
-      document.body.classList.add("no-cursor");
-      // prevent any further focus/keys
-      blockInput();
-    }, 650);
-  }
+  g.style.left = x + 'px';
+  g.style.top  = y + 'px';
+  g.style.setProperty('--r', (Math.random()*10-5) + 'deg');
 
-  function blockInput(){
-    // why: exhibition hard stop
-    const stopper = (e)=>{ e.stopPropagation(); e.preventDefault(); };
-    ["click","mousedown","mouseup","pointerdown","pointerup","touchstart","touchend","keydown","scroll","wheel"]
-      .forEach(ev => window.addEventListener(ev, stopper, {capture:true, passive:false}));
-  }
+  ghostLayer.appendChild(g);
+  setTimeout(()=> g.remove(), 1500);
+}
 
-  // Cursor halo follow
-  window.addEventListener("mousemove", (e)=>{
-    mouse.x = e.clientX; mouse.y = e.clientY;
-  }, {passive:true});
+// crash → error → message → auto reload
+function triggerCrash(){
+  // stop background ghosts
+  if (ghostTimer) clearInterval(ghostTimer);
 
-  function animate(){
-    // ease follow
-    halo.x += (mouse.x - halo.x) * 0.18;
-    halo.y += (mouse.y - halo.y) * 0.18;
-    cursorEl.style.transform = `translate(${halo.x}px, ${halo.y}px) translate(-50%, -50%)`;
-    requestAnimationFrame(animate);
-  }
+  // crash shake + flash
+  document.body.classList.add('crash');
 
-  // Utilities
-  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-  const randomInt = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
-  const randomFloat = (a,b)=> Math.random()*(b-a)+a;
+  // hide field UI
+  setTimeout(()=>{
+    document.querySelector('.wrap').style.filter = 'brightness(0)';
+  }, 150);
 
-  // Init
-  addRow(phrases[idx]);
-  animate();
-})();
+  // show end screen message
+  setTimeout(()=>{
+    endScreen.classList.remove('hidden');
+  }, 500);
+
+  // auto-reload after 10 seconds
+  setTimeout(()=> location.reload(), 10000);
+}
