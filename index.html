@@ -3,37 +3,42 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>BOOKED BY THE SYSTEMS</title>
+  <title>BOOKED BY THE SYSTEMS — THE BOX FILES YOU</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <!-- custom glowing cursor -->
+  <!-- custom transparent cursor -->
   <div id="cursor"></div>
 
-  <!-- flash overlay -->
+  <!-- red flash -->
   <div id="flash"></div>
 
   <main class="wrap">
-    <!-- minimal header -->
-    <header class="hint">TO PROCEED, AGREE.</header>
+    <!-- TOP-CENTER TITLES -->
+    <header class="mast">
+      <h1 class="big">BOOKED BY THE SYSTEMS</h1>
+      <h2 class="sub">THE BOX FILES YOU</h2>
+      <p class="lead">to proceed, agree.</p>
+    </header>
 
-    <!-- center action -->
-    <section class="stage">
-      <button id="agree" class="agree" aria-label="I agree">I AGREE</button>
+    <!-- CENTER INTERACTION -->
+    <section class="center">
+      <div class="agree-container">
+        <input type="checkbox" id="agree" />
+        <label for="agree" id="agreeLabel">I agree</label>
+      </div>
 
-      <!-- bursts & popups live here -->
-      <div id="layer" class="layer" aria-hidden="true"></div>
+      <!-- one-time red word bursts render here -->
+      <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
     </section>
 
-    <!-- end screen -->
-    <section id="end" class="end hidden">
-      <p class="endline">you shouldn’t have agreed to something you never read.</p>
-      <p class="reload">reloading…</p>
+    <!-- END SCREEN -->
+    <section id="end" class="end hidden" aria-live="polite">
+      <p class="endtext">you shouldn’t have agreed to something you never read.</p>
     </section>
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
-
 
