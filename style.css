@@ -10,14 +10,14 @@ body{
 /* layout */
 .wrap{ height:100vh; width:100vw; display:grid; grid-template-rows:auto 1fr; }
 .mast{ text-align:center; padding-top:28px }
-.big{ font-size:clamp(28px,6vw,80px); font-weight:800; letter-spacing:.6px }
-.sub{ font-size:clamp(16px,3vw,28px); color:#d8d8d8; font-weight:700; margin-top:4px }
+/* FEEDBACK: hide big titles on screen; keep only the instruction */
+.big, .sub{ display:none }
 .lead{ color:var(--red); font-size:12px; margin-top:8px; letter-spacing:.4px }
 
-.center{ display:grid; place-items:center; }
+.center{ position:relative; display:grid; place-items:center; }
 
 /* consent control (center) */
-.agree-container{ display:flex; align-items:center; gap:14px; position:relative; z-index:2; }
+.agree-container{ display:flex; align-items:center; gap:14px; position:relative; z-index:3; }
 #agree{
   appearance:none; -webkit-appearance:none;
   width:30px; height:30px; border:2px solid var(--ink);
@@ -31,30 +31,70 @@ body{
 }
 #agree:checked::before{ opacity:1; transform:scale(1) }
 #agree:disabled{ border-color:#bfbfbf; cursor:default }
-#agreeLabel{ font-weight:800; letter-spacing:.6px; cursor:pointer; font-size:clamp(18px,3vw,32px) }
+#agreeLabel{
+  font-weight:800; letter-spacing:.6px; cursor:pointer; font-size:clamp(22px,4vw,40px);
+  transition: transform .12s ease;
+}
 
 /* red flash */
-#flash{ position:fixed; inset:0; background:var(--red); opacity:0; pointer-events:none; z-index:5 }
+#flash{ position:fixed; inset:0; background:var(--red); opacity:0; pointer-events:none; z-index:10 }
 .flash{ animation:flash .18s ease }
 @keyframes flash{ 0%{opacity:.4} 100%{opacity:0} }
 
-/* one-time red word burst */
-.ghostLayer{ position:absolute; inset:0; pointer-events:none; }
+/* one-time red word burst (duration set via --dur from JS) */
+.ghostLayer{ position:absolute; inset:0; pointer-events:none; z-index:1; }
 .ghost{
   position:absolute; color:var(--red); font-weight:800;
-  font-size:clamp(10px,2vw,18px); opacity:0; white-space:nowrap;
+  font-size:clamp(12px,2.4vw,22px); opacity:0; white-space:nowrap;
   transform:translateY(10px) rotate(var(--r,0deg));
-  animation:ghost 1100ms ease forwards;
+  animation:ghost var(--dur,1300ms) ease forwards;
+  text-shadow:0 0 8px #ff2a2a30;
 }
-@keyframes ghost{ 6%{opacity:1} 85%{opacity:1} 100%{opacity:0; transform:translateY(-10px)} }
+@keyframes ghost{ 6%{opacity:1} 85%{opacity:1} 100%{opacity:0; transform:translateY(-12px)} }
+
+/* escalation states */
+.center.bump      #agreeLabel{ transform:scale(1.25) } /* near jumpscare */
+.center.shrink    #agreeLabel{ transform:scale(0.88) }
+.center.bumpBig   #agreeLabel{ transform:scale(1.65) }
+.center.shake     { animation:shake .36s linear 2 }
+@keyframes shake{
+  0%{transform:translateX(0)} 20%{transform:translateX(-10px)}
+  40%{transform:translateX(10px)} 60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)} 100%{transform:translateX(0)}
+}
+
+/* pop-up advert/scam windows (scale via --popupScale) */
+.popup{
+  position:absolute; left:50%; top:50%;
+  width:min(420px,60vw); background:#0b0b0b; border:2px solid #fff;
+  box-shadow:0 14px 60px rgba(0,0,0,.9); z-index:6;
+  transform:translate(-50%,-50%) scale(var(--popupScale,1)) rotate(var(--rot,0deg));
+  animation:popIn .16s ease forwards;
+}
+@keyframes popIn{ from{opacity:0; transform:translate(-50%,-50%) scale(.85)} to{opacity:1; transform:translate(-50%,-50%) scale(1)} }
+.popup.scare{
+  animation:
+    popIn .12s ease forwards,
+    borderFlash .28s ease-in-out 2;
+}
+@keyframes borderFlash{
+  0%{ border-color:#fff; box-shadow:0 0 0 rgba(255,42,42,0) }
+  50%{ border-color:#ff2a2a; box-shadow:0 0 42px rgba(255,42,42,.45) }
+  100%{ border-color:#fff; box-shadow:0 14px 60px rgba(0,0,0,.9) }
+}
+.pophead{
+  display:flex; align-items:center; justify-content:space-between;
+  background:#141414; color:#fff; padding:8px 10px; font-size:12px; border-bottom:2px solid #fff;
+}
+.popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800; cursor:pointer }
+.popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
 /* end */
-.end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:10 }
+.end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:20 }
 .hidden{ display:none }
 .endtext{ font-size:clamp(16px,3vw,28px); color:#fff; text-align:center; max-width:80vw }
 
-
-/* glowing solid cursor like in the reference */
+/* glowing solid cursor like in your reference */
 #cursor {
   position: fixed;
   top: 0;
@@ -70,7 +110,6 @@ body{
   transition: width 0.2s ease, height 0.2s ease, background 0.2s ease, box-shadow 0.3s ease;
   z-index: 999;
 }
-
 /* when hovering interactive text or inputs */
 .interactive-hover #cursor {
   background: rgba(255, 42, 42, 0.9);
@@ -78,15 +117,6 @@ body{
   width: 40px;
   height: 40px;
 }
-
-
-
-
-
-
-
-
-
 
 
 
