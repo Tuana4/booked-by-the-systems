@@ -4,75 +4,46 @@ const label = document.getElementById('agreeLabel');
 const flash = document.getElementById('flash');
 const ghostLayer = document.getElementById('ghostLayer');
 const endScreen = document.getElementById('end');
-const cursorEl = document.getElementById('cursor');
 const centerEl = document.getElementById('center');
+const cursorEl = document.getElementById('cursor');
+const glitchEl = document.getElementById('glitch');
+const redwashEl = document.getElementById('redwash');
 
-/* phrases: stay centered, replace in place */
+/* phrases (center) */
 const phrases = [
-  "I agree",
-  "I still agree",
-  "I continue to agree",
-  "I agree again (for clarity)",
-  "I agree to being archived",
-  "I agree without reading"
+  "I AGREE",
+  "I STILL AGREE",
+  "I CONTINUE TO AGREE",
+  "I AGREE AGAIN (FOR CLARITY)",
+  "I AGREE TO BEING ARCHIVED",
+  "I AGREE WITHOUT READING"
 ];
 
 /* escalating AI-ish sets (longer, creepier) */
 const burstsByStep = [
-  [
-    "consent recorded",
-    "trace detected",
-    "data syncing"
-  ],
-  [
-    "compliance verified",
-    "visibility confirmed",
-    "profiling initiated",
-    "session id: 214—active"
-  ],
-  [
-    "compiling emotional metrics",
-    "estimating persuasion index",
-    "risk assessment: low | proceed",
-    "time-on-task logged"
-  ],
-  [
-    "generating compliance report",
-    "predictive consent model updating",
-    "exporting user fingerprint > ok",
-    "intent cache warm • archival queue"
-  ],
-  [
-    "install trust pack? [ yes ] [ yes ]",
-    "security upgrade required to continue",
-    "system performance degrading • retry",
-    "auto-consent enabled • silent mode"
-  ],
-  [
-    "error: user still present",
-    "manual override denied",
-    "archiving user intent • success",
-    "finalizing agreement • do not close"
-  ]
+  ["consent recorded","trace detected","data syncing"],
+  ["compliance verified","visibility confirmed","profiling initiated","session id: 214—active"],
+  ["compiling emotional metrics","estimating persuasion index","risk assessment: low | proceed","time-on-task logged"],
+  ["generating compliance report","predictive consent model updating","exporting user fingerprint > ok","intent cache warm • archival queue"],
+  ["install trust pack? [ yes ] [ yes ]","security upgrade required to continue","system performance degrading • retry","auto-consent enabled • silent mode"],
+  ["error: user still present","manual override denied","archiving user intent • success","finalizing agreement • do not close"]
 ];
 
 let step = 0;
 label.textContent = phrases[step];
 
-/* make the checkbox definitely clickable (z-order sanity) */
+/* layering for clickability */
 cb.style.position = 'relative';
-cb.style.zIndex = 3;
+cb.style.zIndex = 6;
 label.style.position = 'relative';
-label.style.zIndex = 3;
+label.style.zIndex = 6;
 ghostLayer.style.zIndex = 1;
 
-/* transparent circular cursor that follows mouse */
+/* cursor follow + hover */
 document.addEventListener('mousemove', (e)=>{
   cursorEl.style.left = e.clientX + 'px';
   cursorEl.style.top  = e.clientY + 'px';
 });
-
-/* cursor turns red over interactive elements */
 function updateHoverState(e){
   const t = e.target;
   const interactive = t.tagName === 'INPUT' || t.tagName === 'LABEL' || t.closest('label');
@@ -82,58 +53,50 @@ document.addEventListener('mousemove', updateHoverState);
 document.addEventListener('mouseover', updateHoverState);
 document.addEventListener('mouseout', updateHoverState);
 
-/* ========= interaction (escalation) ========= */
+/* interaction */
 cb.addEventListener('change', () => {
   if(!cb.checked) return;
 
-  pingFlash();
-
-  // red words: longer on screen + denser/faster each step
-  burstOnce(step);
-
-  // visuals: bigger popups, more centered, jump-scare bumps, shakes
-  escalateVisual(step);
+  flashBang();
+  burstOnce(step);       // words behind
+  escalateVisual(step);  // popups, shake, size
 
   // lock briefly
   cb.disabled = true;
 
-  // advance text or end
+  // next or end
   setTimeout(() => {
     step++;
     if (step < phrases.length) {
       label.textContent = phrases[step];
       cb.checked = false;
-      cb.disabled = false;     // re-arm for next agree
+      cb.disabled = false;
     } else {
-      // collapse → end message → auto reload
-      endScreen.classList.remove('hidden');
-      setTimeout(() => location.reload(), 10000);
+      endTransition(); // glitch + red wash → final line
     }
   }, 260);
 });
 
-/* quick red flash */
-function pingFlash(){
+/* effects */
+function flashBang(){
   flash.classList.add('flash');
   setTimeout(()=> flash.classList.remove('flash'), 200);
 }
 
-/* === Ghost bursts: longer + bigger each click === */
+/* bursts get denser, faster, larger, and stay longer */
 function burstOnce(i){
   const rect = document.querySelector('.center').getBoundingClientRect();
   const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
-
-  // intensity curve (1..6)
-  const intensity = i + 1;
-  const count     = 16 + intensity*10;             // more phrases
-  const delay     = Math.max(10, 70 - intensity*9);// faster spawns
-  const durMs     = 1400 + intensity*600;          // stay longer
+  const intensity = i + 1;                 // 1..6
+  const count     = 16 + intensity*10;     // more phrases
+  const delay     = Math.max(10, 70 - intensity*9); // faster spawns
+  const durMs     = 1400 + intensity*600;  // stay longer
   const scaleMin  = 1 + intensity*0.12;
   const scaleMax  = 1 + intensity*0.28;
 
   for (let k=0; k<count; k++){
     setTimeout(() => {
-      spawnGhost(rect, randFrom(set), durMs, rand(scaleMin, scaleMax));
+      spawnGhost(rect, pick(set), durMs, rand(scaleMin, scaleMax));
     }, k*delay);
   }
 }
@@ -153,28 +116,29 @@ function spawnGhost(rect, text, durMs=1300, scale=1){
   g.style.setProperty('--dur', durMs+'ms');
   g.style.transform += ` scale(${scale})`;
 
-  document.body.appendChild(g);
+  // append to ghostLayer (behind the control)
+  ghostLayer.appendChild(g);
   setTimeout(() => g.remove(), durMs + 80);
 }
 
-/* === Visual escalation: popups bigger/closer/more, jumps, shake === */
+/* visual escalation */
 function escalateVisual(i){
   const intensity = i + 1;
 
-  // near jump-scare bumps
+  // label bumps/shrinks for mini jump-scare
   centerEl.classList.remove('bump','shrink','shake','bumpBig');
   if (intensity === 1) centerEl.classList.add('bump');
   if (intensity === 2) centerEl.classList.add('shrink');
   if (intensity === 3 || intensity === 4) centerEl.classList.add('bump');
   if (intensity >= 5) centerEl.classList.add('bumpBig');
 
-  // shake from mid-steps upward
+  // shake from step 3+
   if (intensity >= 3){
     centerEl.classList.add('shake');
     setTimeout(()=> centerEl.classList.remove('shake'), 560);
   }
 
-  // spawn popups — count & size scale with intensity; first popup flashes (scare)
+  // spawn popups behind control, more/bigger/centered as we escalate
   const popupCount =
       (intensity >= 2 ? 1 : 0) +
       (intensity >= 3 ? 1 : 0) +
@@ -185,7 +149,7 @@ function escalateVisual(i){
   }
 }
 
-/* === Popups: bigger, closer to center, brief scare glow === */
+/* popups rendered into ghostLayer (so they're behind the control) */
 function spawnPopup(intensity=1, doScare=false){
   const p = document.createElement('div');
   p.className = 'popup' + (doScare ? ' scare' : '');
@@ -196,7 +160,7 @@ function spawnPopup(intensity=1, doScare=false){
     ["SECURITY CHECK","Unusual activity detected.","Verify identity by agreeing again."],
     ["OPTIMISER","We can make this faster.","Enable automatic agreement."]
   ];
-  const [title, l1, l2] = randFrom(payloads);
+  const [title, l1, l2] = pick(payloads);
   p.innerHTML = `
     <div class="pophead">
       <span>${title}</span>
@@ -208,7 +172,7 @@ function spawnPopup(intensity=1, doScare=false){
     </div>
   `;
 
-  // position: converge toward center as intensity rises
+  // converge toward center as intensity rises
   const r = ghostLayer.getBoundingClientRect();
   const centerBias = Math.max(0.5 - intensity*0.08, 0.12); // 0.5 → 0.12
   const cx = r.left + r.width  * (0.5 + (Math.random()*centerBias*2 - centerBias));
@@ -216,18 +180,36 @@ function spawnPopup(intensity=1, doScare=false){
   p.style.left = cx + 'px';
   p.style.top  = cy + 'px';
 
-  // bigger and slightly more rotated at higher intensity
-  p.style.setProperty('--popupScale', (1 + intensity*0.18).toFixed(2));
+  // bigger & more rotated as intensity increases
+  p.style.setProperty('--popupScale', (1 + intensity*0.20).toFixed(2));
   p.style.setProperty('--rot', (Math.random()*6 - 3) * (1 + intensity*0.12) + 'deg');
 
-  document.body.appendChild(p);
+  // append BEHIND control
+  ghostLayer.appendChild(p);
 
-  // close or auto-remove
   p.querySelector('.popx').addEventListener('click', () => p.remove());
   const life = 2600 + intensity*400; // live longer at higher intensity
   setTimeout(() => p.remove(), life);
 }
 
+/* end transition: glitch → red wash → fade to final line */
+function endTransition(){
+  // glitch / red flash sequence
+  glitchEl.classList.remove('hidden');
+  redwashEl.classList.remove('hidden');
+  glitchEl.classList.add('on');
+  setTimeout(()=> redwashEl.classList.add('on'), 60);
+
+  // after overlays, reveal end text
+  setTimeout(()=>{
+    document.getElementById('end').classList.remove('hidden');
+    document.getElementById('end').classList.add('show');
+  }, 620);
+
+  // auto reload
+  setTimeout(()=> location.reload(), 10000);
+}
+
 /* helpers */
 function rand(min,max){ return min + Math.random()*(max-min); }
-function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
