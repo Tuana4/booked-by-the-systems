@@ -53,18 +53,31 @@ body{
 .hidden{ display:none }
 .endtext{ font-size:clamp(16px,3vw,28px); color:#fff; text-align:center; max-width:80vw }
 
-/* transparent circular cursor */
-#cursor{
-  position:fixed; left:0; top:0; width:40px; height:40px;
-  border:2px solid rgba(255,255,255,.7); border-radius:50%;
-  pointer-events:none; transform:translate(-50%,-50%); z-index:20;
-  transition:border-color .25s ease, width .15s ease, height .15s ease, background .25s ease;
-}
-.interactive-hover #cursor{ /* turns red when hovering interactive stuff */
-  border-color:var(--red); background:rgba(255,42,42,.18); width:54px; height:54px;
+
+/* glowing solid cursor like in the reference */
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s ease, height 0.2s ease, background 0.2s ease, box-shadow 0.3s ease;
+  z-index: 999;
 }
 
-
+/* when hovering interactive text or inputs */
+.interactive-hover #cursor {
+  background: rgba(255, 42, 42, 0.9);
+  box-shadow: 0 0 30px rgba(255, 42, 42, 0.4);
+  width: 40px;
+  height: 40px;
+}
 
 
 
