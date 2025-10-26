@@ -1,15 +1,17 @@
 // elements
+const wrap = document.getElementById('wrap');
+const mast = document.getElementById('mast');
+const centerEl = document.getElementById('center');
+const ghostLayer = document.getElementById('ghostLayer');
 const cb = document.getElementById('agree');
 const label = document.getElementById('agreeLabel');
 const flash = document.getElementById('flash');
-const ghostLayer = document.getElementById('ghostLayer');
-const endScreen = document.getElementById('end');
-const centerEl = document.getElementById('center');
-const cursorEl = document.getElementById('cursor');
 const glitchEl = document.getElementById('glitch');
 const redwashEl = document.getElementById('redwash');
+const endScreen = document.getElementById('end');
+const cursorEl = document.getElementById('cursor');
 
-/* phrases (center) */
+/* label sequence (kept for concept, but constant sizing) */
 const phrases = [
   "I AGREE",
   "I STILL AGREE",
@@ -19,7 +21,7 @@ const phrases = [
   "I AGREE WITHOUT READING"
 ];
 
-/* escalating AI-ish sets (longer, creepier) */
+/* escalating AI-ish sets */
 const burstsByStep = [
   ["consent recorded","trace detected","data syncing"],
   ["compliance verified","visibility confirmed","profiling initiated","session id: 214—active"],
@@ -34,9 +36,9 @@ label.textContent = phrases[step];
 
 /* layering for clickability */
 cb.style.position = 'relative';
-cb.style.zIndex = 11;
+cb.style.zIndex = 51;
 label.style.position = 'relative';
-label.style.zIndex = 11;
+label.style.zIndex = 51;
 ghostLayer.style.zIndex = 1;
 
 /* cursor follow + hover */
@@ -58,8 +60,8 @@ cb.addEventListener('change', () => {
   if(!cb.checked) return;
 
   flashBang();
-  burstOnce(step);       // words behind
-  escalateVisual(step);  // popups, shake, size
+  burstOnce(step);        // red words behind
+  escalatePopups(step);   // popups behind
 
   // lock briefly
   cb.disabled = true;
@@ -72,7 +74,7 @@ cb.addEventListener('change', () => {
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition(); // glitch + long red wash → final text
+      endTransition();    // glitch → long red wash → only final line
     }
   }, 260);
 });
@@ -85,7 +87,7 @@ function flashBang(){
 
 /* bursts get denser, faster, larger, and stay longer */
 function burstOnce(i){
-  const rect = document.querySelector('.center').getBoundingClientRect();
+  const rect = centerEl.getBoundingClientRect();
   const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
   const intensity = i + 1;                 // 1..6
   const count     = 16 + intensity*10;     // more phrases
@@ -116,29 +118,13 @@ function spawnGhost(rect, text, durMs=1300, scale=1){
   g.style.setProperty('--dur', durMs+'ms');
   g.style.transform += ` scale(${scale})`;
 
-  // append behind control
-  ghostLayer.appendChild(g);
+  ghostLayer.appendChild(g);            // behind control
   setTimeout(() => g.remove(), durMs + 120);
 }
 
-/* visual escalation */
-function escalateVisual(i){
+/* popups behind control — bigger/closer/more frequent per step */
+function escalatePopups(i){
   const intensity = i + 1;
-
-  // label bumps/shrinks for mini jump-scare
-  centerEl.classList.remove('bump','shrink','shake','bumpBig');
-  if (intensity === 1) centerEl.classList.add('bump');
-  if (intensity === 2) centerEl.classList.add('shrink');
-  if (intensity === 3 || intensity === 4) centerEl.classList.add('bump');
-  if (intensity >= 5) centerEl.classList.add('bumpBig');
-
-  // shake from step 3+
-  if (intensity >= 3){
-    centerEl.classList.add('shake');
-    setTimeout(()=> centerEl.classList.remove('shake'), 560);
-  }
-
-  // popups behind control, more/bigger/centered as we escalate
   const popupCount =
       (intensity >= 2 ? 1 : 0) +
       (intensity >= 3 ? 1 : 0) +
@@ -149,7 +135,6 @@ function escalateVisual(i){
   }
 }
 
-/* popups rendered into ghostLayer (so they're behind the control) */
 function spawnPopup(intensity=1, doScare=false){
   const p = document.createElement('div');
   p.className = 'popup' + (doScare ? ' scare' : '');
@@ -181,30 +166,27 @@ function spawnPopup(intensity=1, doScare=false){
   p.style.top  = cy + 'px';
 
   // bigger & more rotated as intensity increases
-  p.style.setProperty('--popupScale', (1 + intensity*0.20).toFixed(2));
+  p.style.setProperty('--popupScale', (1 + intensity*0.24).toFixed(2));  // escalate
   p.style.setProperty('--rot', (Math.random()*6 - 3) * (1 + intensity*0.12) + 'deg');
 
-  ghostLayer.appendChild(p);
-
-  // close or auto-remove
-  p.querySelector('.popx').addEventListener('click', () => p.remove());
-  const life = 2600 + intensity*400; // live longer at higher intensity
-  setTimeout(() => p.remove(), life);
+  ghostLayer.appendChild(p);            // behind control
+  setTimeout(() => p.remove(), 2600 + intensity*450);
 }
 
-/* end transition: glitch → LONG red wash (2.5s) → final line */
+/* end transition: glitch → LONG red wash (~3.2s) → ONLY final line */
 function endTransition(){
   glitchEl.classList.remove('hidden');
   redwashEl.classList.remove('hidden');
 
-  glitchEl.classList.add('on');           // ~0.7s glitch
-  setTimeout(()=> redwashEl.classList.add('on'), 80);   // start red wash
+  glitchEl.classList.add('on');                 // ~0.7s glitch
+  setTimeout(()=> redwashEl.classList.add('on'), 80);   // red wash w/ plateau
 
-  // after ~2.5s red wash, show final text
+  // after the wash, hide all UI and show only the end line
   setTimeout(()=>{
+    wrap.classList.add('endmode');              // hides mast + center
     endScreen.classList.remove('hidden');
-    endScreen.classList.add('show');
-  }, 2600);
+    requestAnimationFrame(()=> endScreen.classList.add('show')); // smooth fade
+  }, 3200);
 
   // auto reload
   setTimeout(()=> location.reload(), 10000);
