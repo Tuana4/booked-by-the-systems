@@ -101,3 +101,18 @@ function updateHoverState(e){
 document.addEventListener('mousemove', updateHoverState);
 document.addEventListener('mouseover', updateHoverState);
 document.addEventListener('mouseout', updateHoverState);
+const cursor = document.getElementById("cursor");
+
+document.addEventListener("mousemove", e => {
+  cursor.style.left = e.clientX + "px";
+  cursor.style.top = e.clientY + "px";
+});
+
+function updateHover(e) {
+  const t = e.target;
+  const isInteractive = t.tagName === "INPUT" || t.tagName === "LABEL" || t.closest("label");
+  document.body.classList.toggle("interactive-hover", isInteractive);
+}
+document.addEventListener("mousemove", updateHover);
+document.addEventListener("mouseover", updateHover);
+document.addEventListener("mouseout", updateHover);
