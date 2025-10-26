@@ -15,9 +15,9 @@
   <div id="glitch" class="glitch hidden"></div>
   <div id="redwash" class="redwash hidden"></div>
 
-  <main class="wrap">
-    <!-- titles kept in DOM; only instruction visible -->
-    <header class="mast">
+  <main class="wrap" id="wrap">
+    <!-- titles kept in DOM; only instruction visible on start -->
+    <header class="mast" id="mast">
       <h1 class="big">BOOKED BY THE SYSTEMS</h1>
       <h2 class="sub">THE BOX FILES YOU</h2>
       <p class="lead">to proceed, agree.</p>
@@ -29,13 +29,13 @@
       <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
 
       <!-- control (always on top) -->
-      <div class="agree-container">
+      <div class="agree-container" id="agreeWrap">
         <input type="checkbox" id="agree" />
         <label for="agree" id="agreeLabel">I AGREE</label>
       </div>
     </section>
 
-    <!-- end -->
+    <!-- end (only line shown at the end) -->
     <section id="end" class="end hidden" aria-live="polite">
       <p class="endtext">you shouldn’t have agreed to something you never read.</p>
     </section>
