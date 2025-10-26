@@ -9,50 +9,73 @@ body{
 
 /* layout */
 .wrap{ height:100vh; width:100vw; display:grid; grid-template-rows:auto 1fr; }
-.mast{ text-align:center; padding-top:28px }
-/* hide big titles on screen; keep only instruction */
+.mast{ text-align:center; padding-top:24px }
+/* hide big titles; keep only instruction visible */
 .big,.sub{ display:none }
-.lead{ color:var(--red); font-size:15px; letter-spacing:.6px; margin-top:8px }
+.lead{
+  color:var(--red);
+  font-size:clamp(16px,2.4vw,24px);     /* larger instruction */
+  letter-spacing:.65px;
+  margin-top:6px
+}
 
 /* center stage */
-.center{ position:relative; display:grid; place-items:center; height:calc(100vh - 70px); }
+.center{
+  position:relative; display:grid; place-items:center;
+  height:calc(100vh - 72px);
+  padding:12px;
+}
 
-/* background layer always BEHIND the checkbox/label */
+/* BACKGROUND (behind control) */
 .ghostLayer{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
 
-/* control: always ON TOP */
+/* CONTROL (on top) */
 .agree-container{
-  position:relative; z-index:5;
-  display:flex; align-items:center; gap:18px;
+  position:relative; z-index:10;
+  display:flex; align-items:center; justify-content:center;
+  gap:36px;                                    /* bigger gap: no overlap */
+  padding:8px 16px;
 }
-/* bigger checkbox, sits BESIDE the label (no overlap) */
+
+/* BIGGER SQUARE CHECKBOX (56×56, 3px border) */
 #agree{
   appearance:none; -webkit-appearance:none;
-  width:42px; height:42px; border:3px solid var(--ink);
-  display:grid; place-items:center; background:transparent; cursor:pointer;
+  width:56px; height:56px;
+  border:3px solid var(--ink);
+  border-radius:2px;
+  background:transparent;
+  display:grid; place-items:center;
+  cursor:pointer;
   transition:transform .1s ease;
+  box-sizing:border-box;
 }
-#agree:active{ transform:scale(.96) }
+#agree:active{ transform:scale(.97) }
 #agree::before{
-  content:"✓"; font-weight:800; font-size:26px;
+  content:"✓"; font-weight:800; font-size:34px; line-height:1;
   opacity:0; transform:scale(.7);
   transition:transform .12s ease, opacity .12s ease;
 }
 #agree:checked::before{ opacity:1; transform:scale(1) }
 #agree:disabled{ border-color:#bfbfbf; cursor:default }
-/* longer-looking label (letter-spacing) & bigger */
+
+/* READABLE “I AGREE” (less spread, smaller max) */
 #agreeLabel{
-  font-weight:800; letter-spacing:.12em; cursor:pointer;
-  font-size:clamp(28px,5vw,64px);
-  transition: transform .12s ease;
+  font-weight:800; letter-spacing:.08em;       /* reduced spacing for legibility */
+  font-size:clamp(26px,4.8vw,56px);           /* smaller max size */
+  white-space:nowrap;
+  cursor:pointer;
+  transition: transform .12s ease, text-shadow .12s ease;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+  text-shadow:0 0 10px rgba(255,255,255,.06);
 }
 
-/* red flash */
+/* flash */
 #flash{ position:fixed; inset:0; background:var(--red); opacity:0; pointer-events:none; z-index:30 }
 .flash{ animation:flash .18s ease }
 @keyframes flash{ 0%{opacity:.45} 100%{opacity:0} }
 
-/* red word ghosts (duration set via --dur from JS) */
+/* red word ghosts (duration via --dur from JS) */
 .ghost{
   position:absolute; color:var(--red); font-weight:800;
   font-size:clamp(12px,2.6vw,26px); opacity:0; white-space:nowrap;
@@ -62,10 +85,10 @@ body{
 }
 @keyframes ghost{ 6%{opacity:1} 85%{opacity:1} 100%{opacity:0; transform:translateY(-12px)} }
 
-/* escalation states on the center container */
-.center.bump      #agreeLabel{ transform:scale(1.25) } /* mini jump */
+/* escalation states */
+.center.bump      #agreeLabel{ transform:scale(1.22) }
 .center.shrink    #agreeLabel{ transform:scale(0.9) }
-.center.bumpBig   #agreeLabel{ transform:scale(1.65) }
+.center.bumpBig   #agreeLabel{ transform:scale(1.55) }
 .center.shake     { animation:shake .36s linear 2 }
 @keyframes shake{
   0%{transform:translateX(0)} 20%{transform:translateX(-10px)}
@@ -73,7 +96,7 @@ body{
   80%{transform:translateX(6px)} 100%{transform:translateX(0)}
 }
 
-/* pop-up windows (rendered inside ghostLayer => behind control) */
+/* pop-ups (rendered inside ghostLayer => behind control) */
 .popup{
   position:absolute; left:50%; top:50%;
   width:min(440px,62vw); background:#0b0b0b; border:2px solid #fff;
@@ -99,19 +122,19 @@ body{
 .popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800; cursor:pointer }
 .popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
-/* end screen */
+/* end screen (smaller text) */
 .end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:40; opacity:0; transition:opacity .6s ease }
 .end.show{ opacity:1 }
 .hidden{ display:none }
-.endtext{ font-size:clamp(16px,3vw,28px); color:#fff; text-align:center; max-width:80vw }
+.endtext{ font-size:clamp(14px,2.2vw,22px); color:#fff; text-align:center; max-width:80vw }
 
-/* glitch & red wash overlays for the ending */
+/* glitch & LONGER red wash overlays */
 .glitch{
   position:fixed; inset:0; z-index:35; pointer-events:none; background:
     repeating-linear-gradient(0deg, #fff0 0 2px, #fff1 2px 3px);
   opacity:0;
 }
-.glitch.on{ animation:glitch 0.5s ease forwards }
+.glitch.on{ animation:glitch 0.7s ease forwards }  /* slightly longer glitch */
 @keyframes glitch{
   0%{ opacity:.0; filter:hue-rotate(0) contrast(1) }
   20%{ opacity:.25; transform:translate(-3px,1px) }
@@ -123,8 +146,8 @@ body{
 .redwash{
   position:fixed; inset:0; background:var(--red); opacity:0; z-index:36; pointer-events:none;
 }
-.redwash.on{ animation:redwash 0.6s ease forwards }
-@keyframes redwash{ 0%{opacity:0} 60%{opacity:.55} 100%{opacity:0} }
+.redwash.on{ animation:redwash 2.5s ease forwards }  /* LONGER red screen */
+@keyframes redwash{ 0%{opacity:0} 35%{opacity:.65} 100%{opacity:0} }
 
 /* glowing solid cursor */
 #cursor{
@@ -137,18 +160,6 @@ body{
   background:rgba(255,42,42,.9); box-shadow:0 0 30px rgba(255,42,42,.4);
   width:44px; height:44px;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
