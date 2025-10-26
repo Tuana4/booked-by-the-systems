@@ -34,9 +34,9 @@ label.textContent = phrases[step];
 
 /* layering for clickability */
 cb.style.position = 'relative';
-cb.style.zIndex = 6;
+cb.style.zIndex = 11;
 label.style.position = 'relative';
-label.style.zIndex = 6;
+label.style.zIndex = 11;
 ghostLayer.style.zIndex = 1;
 
 /* cursor follow + hover */
@@ -72,7 +72,7 @@ cb.addEventListener('change', () => {
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition(); // glitch + red wash → final line
+      endTransition(); // glitch + long red wash → final text
     }
   }, 260);
 });
@@ -96,7 +96,7 @@ function burstOnce(i){
 
   for (let k=0; k<count; k++){
     setTimeout(() => {
-      spawnGhost(rect, pick(set), durMs, rand(scaleMin, scaleMax));
+      spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.15), rand(scaleMin, scaleMax));
     }, k*delay);
   }
 }
@@ -116,9 +116,9 @@ function spawnGhost(rect, text, durMs=1300, scale=1){
   g.style.setProperty('--dur', durMs+'ms');
   g.style.transform += ` scale(${scale})`;
 
-  // append to ghostLayer (behind the control)
+  // append behind control
   ghostLayer.appendChild(g);
-  setTimeout(() => g.remove(), durMs + 80);
+  setTimeout(() => g.remove(), durMs + 120);
 }
 
 /* visual escalation */
@@ -138,7 +138,7 @@ function escalateVisual(i){
     setTimeout(()=> centerEl.classList.remove('shake'), 560);
   }
 
-  // spawn popups behind control, more/bigger/centered as we escalate
+  // popups behind control, more/bigger/centered as we escalate
   const popupCount =
       (intensity >= 2 ? 1 : 0) +
       (intensity >= 3 ? 1 : 0) +
@@ -184,27 +184,27 @@ function spawnPopup(intensity=1, doScare=false){
   p.style.setProperty('--popupScale', (1 + intensity*0.20).toFixed(2));
   p.style.setProperty('--rot', (Math.random()*6 - 3) * (1 + intensity*0.12) + 'deg');
 
-  // append BEHIND control
   ghostLayer.appendChild(p);
 
+  // close or auto-remove
   p.querySelector('.popx').addEventListener('click', () => p.remove());
   const life = 2600 + intensity*400; // live longer at higher intensity
   setTimeout(() => p.remove(), life);
 }
 
-/* end transition: glitch → red wash → fade to final line */
+/* end transition: glitch → LONG red wash (2.5s) → final line */
 function endTransition(){
-  // glitch / red flash sequence
   glitchEl.classList.remove('hidden');
   redwashEl.classList.remove('hidden');
-  glitchEl.classList.add('on');
-  setTimeout(()=> redwashEl.classList.add('on'), 60);
 
-  // after overlays, reveal end text
+  glitchEl.classList.add('on');           // ~0.7s glitch
+  setTimeout(()=> redwashEl.classList.add('on'), 80);   // start red wash
+
+  // after ~2.5s red wash, show final text
   setTimeout(()=>{
-    document.getElementById('end').classList.remove('hidden');
-    document.getElementById('end').classList.add('show');
-  }, 620);
+    endScreen.classList.remove('hidden');
+    endScreen.classList.add('show');
+  }, 2600);
 
   // auto reload
   setTimeout(()=> location.reload(), 10000);
