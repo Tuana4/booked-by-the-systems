@@ -1,87 +1,103 @@
-:root{
-  --bg:#000; --ink:#fff; --red:#ff2a2a;
+// elements
+const cb = document.getElementById('agree');
+const label = document.getElementById('agreeLabel');
+const flash = document.getElementById('flash');
+const ghostLayer = document.getElementById('ghostLayer');
+const endScreen = document.getElementById('end');
+const cursorEl = document.getElementById('cursor');
+
+/* phrases: stay centered, replace in place */
+const phrases = [
+  "I agree",
+  "I still agree",
+  "I continue to agree",
+  "I agree again (for clarity)",
+  "I agree to being archived",
+  "I agree without reading"
+];
+
+/* red background words: only burst after each agree, then stop */
+const burstWords = [
+  "consent recorded","data syncing","trace detected",
+  "agreement stored","file active","visibility confirmed"
+];
+
+let step = 0;
+label.textContent = phrases[step];
+
+/* make the checkbox definitely clickable (z-order sanity) */
+cb.style.position = 'relative';
+cb.style.zIndex = 3;
+label.style.position = 'relative';
+label.style.zIndex = 3;
+ghostLayer.style.zIndex = 1;
+
+/* click / change */
+cb.addEventListener('change', () => {
+  if(!cb.checked) return;
+
+  // tiny red flash
+  flash.classList.add('flash');
+  setTimeout(() => flash.classList.remove('flash'), 200);
+
+  // ONE-TIME red word burst (show for ~700ms) then stop
+  burstOnce();
+
+  // lock briefly for decisiveness
+  cb.disabled = true;
+
+  // move to next phrase
+  setTimeout(() => {
+    step++;
+    if (step < phrases.length) {
+      label.textContent = phrases[step];
+      cb.checked = false;
+      cb.disabled = false;     // re-arm for next agree
+    } else {
+      // final: show end message then reload after 10s
+      endScreen.classList.remove('hidden');
+      setTimeout(() => location.reload(), 10000);
+    }
+  }, 240);
+});
+
+/* one-time burst generator */
+function burstOnce(){
+  // spawn ~10 words randomly around center, quickly
+  const center = document.querySelector('.center').getBoundingClientRect();
+  const count = 10;
+  for (let i=0; i<count; i++){
+    setTimeout(() => spawnGhost(center), i*45); // rapid burst
+  }
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{
-  background:var(--bg); color:var(--ink);
-  font-family:"Futura","Futura PT","Avenir Next","Avenir","IBM Plex Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
-  text-transform:uppercase; overflow:hidden; cursor:none;
+
+/* place a single red word */
+function spawnGhost(rect){
+  const g = document.createElement('div');
+  g.className = 'ghost';
+  g.textContent = burstWords[Math.floor(Math.random()*burstWords.length)];
+  const padX = 80, padY = 60;
+  const x = rect.left + padX + Math.random()*(rect.width - padX*2);
+  const y = rect.top  + padY + Math.random()*(rect.height - padY*2);
+  g.style.left = x + 'px';
+  g.style.top  = y + 'px';
+  g.style.setProperty('--r', (Math.random()*10-5)+'deg');
+  document.body.appendChild(g);
+  setTimeout(() => g.remove(), 1100);
 }
 
-/* layout */
-.wrap{height:100vh;width:100vw;display:grid;grid-template-rows:auto 1fr}
-.hint{justify-self:center;margin-top:22px;color:var(--red);font-size:12px;letter-spacing:.4px}
-.stage{position:relative;display:grid;place-items:center}
+/* transparent circular cursor that follows mouse */
+document.addEventListener('mousemove', (e)=>{
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top  = e.clientY + 'px';
+});
 
-/* big agree button */
-.agree{
-  appearance:none;background:transparent;border:2px solid var(--ink);
-  color:var(--ink); font-weight:800; letter-spacing:.6px;
-  padding:18px 28px; font-size:clamp(22px,6vw,64px);
-  transition:transform .08s ease, background .12s ease, color .12s ease, border-color .12s;
-  cursor:pointer; z-index:5;
+/* cursor turns red over interactive elements */
+function updateHoverState(e){
+  const t = e.target;
+  const interactive = t.tagName === 'INPUT' || t.tagName === 'LABEL' || t.closest('label');
+  document.body.classList.toggle('interactive-hover', !!interactive);
 }
-.agree:active{transform:scale(.97)}
-.agree.decoy{position:absolute;pointer-events:none;opacity:.85}
-
-/* flash */
-#flash{position:fixed;inset:0;background:var(--red);opacity:0;pointer-events:none;z-index:20}
-.flash{animation:flash .18s ease}
-@keyframes flash{0%{opacity:.45}100%{opacity:0}}
-
-/* bursts + popups container */
-.layer{position:absolute;inset:0;overflow:hidden;z-index:2}
-
-/* data phrases */
-.burst{
-  position:absolute; color:var(--red); font-weight:800;
-  font-size:clamp(10px,2.2vw,20px); white-space:nowrap; opacity:0;
-  transform:translateY(12px) rotate(var(--r,0deg));
-  text-shadow:0 0 8px #ff2a2a30;
-  animation:burst 1100ms ease forwards;
-}
-@keyframes burst{6%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
-
-/* scam/pop-up windows */
-.popup{
-  position:absolute; width:min(380px,46vw); background:#0b0b0b; border:2px solid #fff;
-  box-shadow:0 10px 40px #000; z-index:4;
-  transform:translate(-50%, -50%) scale(.9) rotate(var(--rot,0deg));
-  animation:popIn .18s ease forwards;
-}
-@keyframes popIn{from{opacity:0;transform:translate(-50%,-50%) scale(.85)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-.pophead{
-  display:flex;align-items:center;justify-content:space-between;
-  background:#141414;color:#fff;padding:8px 10px;font-size:12px;border-bottom:2px solid #fff;
-}
-.popx{border:2px solid #fff;background:transparent;color:#fff;padding:2px 6px;font-weight:800;cursor:pointer}
-.popbody{padding:14px 12px;color:#fff;font-size:clamp(10px,2vw,14px);line-height:1.35}
-
-/* shake escalation */
-.shake{animation:shake .25s linear 2}
-@keyframes shake{
-  0%{transform:translateX(0)} 20%{transform:translateX(-8px)}
-  40%{transform:translateX(8px)} 60%{transform:translateX(-5px)}
-  80%{transform:translateX(5px)} 100%{transform:translateX(0)}
-}
-
-/* end */
-.end{position:fixed;inset:0;display:grid;place-items:center;background:#000;z-index:50}
-.hidden{display:none}
-.endline{font-size:clamp(16px,3.4vw,34px);text-align:center;max-width:80vw}
-.reload{margin-top:8px;color:#aaa;font-size:12px}
-
-/* glowing solid cursor (white -> red on hover) */
-#cursor{
-  position:fixed; top:0; left:0; width:32px; height:32px; border-radius:50%;
-  background:rgba(255,255,255,.9); box-shadow:0 0 18px rgba(255,255,255,.35);
-  mix-blend-mode:difference; pointer-events:none; transform:translate(-50%,-50%); z-index:100;
-  transition:width .2s,height .2s,background .2s,box-shadow .3s;
-}
-.interactive #cursor{background:rgba(255,42,42,.9); box-shadow:0 0 30px rgba(255,42,42,.4); width:40px;height:40px}
-
-/* projection-safe subtle breathing */
-body{animation:pulse 6s ease-in-out infinite}
-@keyframes pulse{0%,100%{background:#000}50%{background:#090000}}
-
+document.addEventListener('mousemove', updateHoverState);
+document.addEventListener('mouseover', updateHoverState);
+document.addEventListener('mouseout', updateHoverState);
