@@ -3,7 +3,7 @@
 html,body{ height:100% }
 body{
   background:var(--bg); color:var(--ink);
-  font-family:"Futura","Futura PT","Avenir Next","Avenir","IBM Plex Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-family:"Futura","Futura PT","Avenir Next","Avenir","Helvetica Neue",Helvetica,Arial,sans-serif;
   text-transform:uppercase; overflow:hidden; cursor:none;
 }
 
@@ -13,22 +13,23 @@ body{
 /* hide big titles; keep only instruction visible */
 .big,.sub{ display:none }
 .lead{
-  color:var(--red);
-  font-size:clamp(16px,2.6vw,26px);       /* bigger instruction */
-  letter-spacing:.65px;
-  margin-top:6px;
+  color:#ff3b3b;                    /* brighter red */
+  font-size:clamp(20px,3.4vw,36px); /* bigger instruction */
+  letter-spacing:.7px;
+  margin-top:6px
 }
 
 /* center stage */
 .center{
   position:relative; display:grid; place-items:center;
-  height:calc(100vh - 72px);
+  height:calc(100vh - 76px);
   padding:12px;
 }
 
 /* BACKGROUND (behind control) */
 .ghostLayer{
   position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden;
+  font-family:"Futura","Futura PT","Avenir Next","Avenir","Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
 /* CONTROL (on top, never overlapped) */
@@ -55,13 +56,17 @@ body{
 #agree:checked::before{ opacity:1; transform:scale(1) }
 #agree:disabled{ border-color:#bfbfbf; cursor:default }
 
-/* “I AGREE” — CONSTANT size + readable */
+/* “I AGREE” — CONSTANT size + white outline/glow for readability */
 #agreeLabel{
   font-weight:800; letter-spacing:.08em;
   font-size:clamp(26px,4.6vw,52px);
   white-space:nowrap; cursor:pointer;
   text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased;
-  text-shadow:0 0 10px rgba(255,255,255,.06);
+  /* subtle white outline + glow */
+  -webkit-text-stroke: 0.6px rgba(255,255,255,.55);
+  text-shadow:
+    0 0 10px rgba(255,255,255,.08),
+    0 0 20px rgba(255,255,255,.05);
 }
 
 /* tiny red flash on click */
@@ -77,6 +82,7 @@ body{
   animation:ghost var(--dur,1300ms) ease forwards;
   text-shadow:0 0 8px #ff2a2a30;
   pointer-events:none;                         /* never interacts */
+  font-family:"Futura","Futura PT","Avenir Next","Avenir","Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 @keyframes ghost{ 6%{opacity:1} 85%{opacity:1} 100%{opacity:0; transform:translateY(-12px)} }
 
@@ -95,6 +101,7 @@ body{
   box-shadow:0 14px 60px rgba(0,0,0,.9); z-index:1; /* BEHIND control */
   transform:translate(-50%,-50%) scale(var(--popupScale,1)) rotate(var(--rot,0deg));
   animation:popIn .16s ease forwards; pointer-events:none;
+  font-family:"Futura","Futura PT","Avenir Next","Avenir","Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 @keyframes popIn{ from{opacity:0; transform:translate(-50%,-50%) scale(.85)} to{opacity:1; transform:translate(-50%,-50%) scale(1)} }
 .popup.scare{
@@ -112,13 +119,19 @@ body{
 .popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800; cursor:default }
 .popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
-/* end (smaller text, smooth fade) */
-.end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:40; opacity:0; transition:opacity 1.4s ease }
+/* end (only line shown; smooth fade) */
+.end{
+  position:fixed; inset:0; display:grid; place-items:center;
+  background:#000; z-index:40; opacity:0; transition:opacity 1.4s ease;
+  font-family:"Futura","Futura PT","Avenir Next","Avenir","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
 .end.show{ opacity:1 }
 .hidden{ display:none }
-.endtext{ font-size:clamp(14px,2.2vw,22px); color:#fff; text-align:center; max-width:80vw }
+.endtext{
+  font-size:clamp(14px,2.2vw,22px); color:#fff; text-align:center; max-width:80vw;
+}
 
-/* glitch & LONGER red wash with plateau */
+/* glitch & LONG red wash with plateau */
 .glitch{
   position:fixed; inset:0; z-index:35; pointer-events:none; background:
     repeating-linear-gradient(0deg, #fff0 0 2px, #fff1 2px 3px);
@@ -136,15 +149,18 @@ body{
 .redwash{
   position:fixed; inset:0; background:var(--red); opacity:0; z-index:36; pointer-events:none;
 }
-/* ~3.2s total with a soft plateau, then fade out */
 .redwash.on{ animation:redwash 3.2s ease forwards }
 @keyframes redwash{
   0%{opacity:0}
   25%{opacity:.35}
-  50%{opacity:.72}   /* peak */
-  65%{opacity:.72}   /* hold a bit (plateau) */
+  50%{opacity:.72}
+  65%{opacity:.72}     /* hold/plateau */
   100%{opacity:0}
 }
+
+/* end mode: hide everything except end screen */
+.wrap.endmode #mast,
+.wrap.endmode #center { display:none }
 
 /* glowing cursor */
 #cursor{
