@@ -10,35 +10,31 @@
   <!-- custom cursor -->
   <div id="cursor"></div>
 
-  <!-- overlays -->
+  <!-- overlays (no pointer events) -->
   <div id="flash"></div>
   <div id="glitch" class="glitch hidden"></div>
   <div id="rgb" class="rgb hidden"></div>
   <div id="redwash" class="redwash hidden"></div>
 
-  <!-- mute (sound is optional; starts muted) -->
-  <button id="muteBtn" class="muter" aria-pressed="true" aria-label="Toggle sound">🔇 sound off</button>
-  <audio id="sndClick" src="sounds/click1.mp3" preload="auto"></audio>
-
   <main class="wrap" id="wrap">
     <header class="mast" id="mast">
       <h1 class="big">BOOKED BY THE SYSTEMS</h1>
       <h2 class="sub">THE BOX FILES YOU</h2>
-      <p class="lead">to proceed, agree.</p>
+      <p class="lead">TO PROCEED, AGREE.</p>
     </header>
 
     <section class="center" id="center">
-      <!-- FULL-SCREEN background words / popups (behind control) -->
+      <!-- full-screen background words / popups (behind control) -->
       <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
 
-      <!-- consent control (always on top) -->
+      <!-- consent control (always on top & clickable) -->
       <div class="agree-container" id="agreeWrap">
         <input type="checkbox" id="agree" />
         <label for="agree" id="agreeLabel">I AGREE</label>
       </div>
     </section>
 
-    <!-- end: ONLY this line remains -->
+    <!-- final message ONLY -->
     <section id="end" class="end hidden" aria-live="polite">
       <p class="endtext">you shouldn’t have agreed to something you never read.</p>
     </section>
