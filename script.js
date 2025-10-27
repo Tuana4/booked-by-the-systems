@@ -8,6 +8,8 @@ const flash      = document.getElementById('flash');
 const glitchEl   = document.getElementById('glitch');
 const rgbEl      = document.getElementById('rgb');
 const redwashEl  = document.getElementById('redwash');
+const blocksEl   = document.getElementById('blocks');
+const crashEl    = document.getElementById('crash');
 const endScreen  = document.getElementById('end');
 const cursorEl   = document.getElementById('cursor');
 
@@ -78,7 +80,7 @@ cb.addEventListener('change', ()=>{
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition();             // glitchy red breakdown → final line
+      endTransition();             // red system crash → final line
     }
   }, 260);
 });
@@ -92,7 +94,7 @@ function flashBang(){
 /* FULL-VIEW bursts — lighter for first two clicks */
 function burstOnce(i){
   const rect = { left: -0.10*innerWidth, top: -0.14*innerHeight, width: innerWidth*1.20, height: innerHeight*1.28 };
-  const set  = burstsByUG(i);
+  const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
   const intensity = i + 1;
 
   const baseCount = (i < 2) ? 10 : 24;          // subtle first two
@@ -106,8 +108,6 @@ function burstOnce(i){
     setTimeout(()=> spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.2), rand(scaleMin, scaleMax)), k*delay);
   }
 }
-function burstsByUG(i){ return burstsByStep[Math.min(i, burstsByStep.length-1)]; }
-
 function spawnGhost(rect, text, dur=1300, scale=1){
   const g = document.createElement('div');
   g.className = 'ghost';
@@ -145,7 +145,7 @@ function spawnPopup(intensity=1, scare=false){
     `<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
      <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
 
-  // place anywhere in full-bleed layer; drift toward center as intensity rises
+  // anywhere within full-bleed layer; drift toward center as intensity rises
   const r = ghostLayer.getBoundingClientRect();
   const bias = Math.max(0.5 - intensity*0.08, 0.12);
   const cx = r.left + r.width  * (0.5 + (Math.random()*bias*2 - bias));
@@ -160,21 +160,55 @@ function spawnPopup(intensity=1, scare=false){
   setTimeout(()=> p.remove(), 2600 + intensity*450);
 }
 
-/* GLITCHY RED END (no extra lines) */
+/* ====== GLITCHY RED END (no white lines) ====== */
 function endTransition(){
-  glitchEl.classList.remove('hidden'); glitchEl.classList.add('on');     // scanline glitch
-  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);  // RGB split
-  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 420); // long red wash
+  // 1) red jitter
+  glitchEl.classList.remove('hidden'); 
+  glitchEl.classList.add('on');
 
+  // 2) blocky tear artifacts
+  blocksEl.classList.remove('hidden');
+  spawnBlocks(20); // tweak count if you want more/less
+
+  // 3) rgb split hit
+  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
+
+  // 4) red pulse burst
+  setTimeout(()=>{ crashEl.classList.remove('hidden'); crashEl.classList.add('on'); }, 360);
+
+  // 5) long red wash
+  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 560);
+
+  // 6) hide UI → reveal final line only
   setTimeout(()=>{
-    wrap.classList.add('endmode');                       // hide UI
+    wrap.classList.add('endmode');
     endScreen.classList.remove('hidden');
-    requestAnimationFrame(()=> endScreen.classList.add('show')); // smooth fade in
-  }, 3200);
+    requestAnimationFrame(()=> endScreen.classList.add('show'));
+  }, 3600);
 
-  setTimeout(()=> location.reload(), 10000);             // loop
+  // 7) loop back
+  setTimeout(()=> location.reload(), 10000);
 }
 
 /* helpers */
+function spawnBlocks(n=12){
+  const r = blocksEl.getBoundingClientRect();
+  for (let i=0;i<n;i++){
+    const b = document.createElement('div');
+    b.className = 'block';
+    const w = Math.random()*220 + 80;   // 80–300px
+    const h = Math.random()*90  + 40;   // 40–130px
+    const x = r.left + Math.random()*r.width  - w*0.5;
+    const y = r.top  + Math.random()*r.height - h*0.5;
+    b.style.width  = `${w}px`;
+    b.style.height = `${h}px`;
+    b.style.left   = `${x}px`;
+    b.style.top    = `${y}px`;
+    b.style.setProperty('--sx', `${(Math.random()*160-80)}px`);
+    b.style.setProperty('--sy', `${(Math.random()*120-60)}px`);
+    blocksEl.appendChild(b);
+    setTimeout(()=> b.remove(), 1100 + Math.random()*400);
+  }
+}
 function rand(min,max){ return min + Math.random()*(max-min) }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
