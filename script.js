@@ -6,17 +6,16 @@ const cb = document.getElementById('agree');
 const label = document.getElementById('agreeLabel');
 const flash = document.getElementById('flash');
 const glitchEl = document.getElementById('glitch');
-const surgicalEl = document.getElementById('surgical');
-const slicesEl = document.getElementById('slices');
 const rgbEl = document.getElementById('rgb');
 const redwashEl = document.getElementById('redwash');
 const endScreen = document.getElementById('end');
-const ekg = document.getElementById('ekg');
 const cursorEl = document.getElementById('cursor');
+const muteBtn = document.getElementById('muteBtn');
+const sndClick = document.getElementById('sndClick');
 
 /* LONGER “I AGREE” SEQUENCE (same size/position) */
 const phrases = [
-  "I AGREE",
+ "I AGREE",
   "I STILL AGREE",
   "I CONTINUE TO AGREE",
   "I AGREE AGAIN",
@@ -27,7 +26,6 @@ const phrases = [
   "I AGREE TO YOUR TERMS",
   "I AGREE TO ALL FUTURE AGREEMENTS",
   "I AGREE WITHOUT READING", 
-];
 
 /* escalating AI-ish sets (used for red bursts) */
 const burstsByStep = [
@@ -46,7 +44,7 @@ label.textContent = phrases[step];
 cb.style.zIndex = 51; label.style.zIndex = 51; ghostLayer.style.zIndex = 1;
 
 /* custom cursor + hover state */
-document.addEventListener('mousemove', (e)=>{ cursorEl.style.left = e.clientX+'px'; cursorEl.style.top = e.clientY+'px'; });
+document.addEventListener('mousemove', (e)=>{ cursorEl.style.left = e.clientX+'px'; cursorEl.style.top  = e.clientY+'px'; });
 ['mousemove','mouseover','mouseout'].forEach(evt=>{
   document.addEventListener(evt, e=>{
     const t=e.target; const interactive=t.tagName==='INPUT'||t.tagName==='LABEL'||t.closest('label');
@@ -54,13 +52,29 @@ document.addEventListener('mousemove', (e)=>{ cursorEl.style.left = e.clientX+'p
   });
 });
 
+/* sound (optional, starts muted) */
+let muted = true;
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  muteBtn.setAttribute('aria-pressed', String(muted));
+  muteBtn.textContent = muted ? '🔇 sound off' : '🔊 sound on';
+});
+function blip(){
+  if (muted || !sndClick) return;
+  try { sndClick.pause(); sndClick.currentTime = 0; sndClick.volume = 0.45; sndClick.playbackRate = 1; sndClick.play(); } catch(e){}
+}
+
 /* interaction logic */
 cb.addEventListener('change', () => {
   if(!cb.checked) return;
 
+  blip();                // soft click sound
   flashBang();
-  burstOnce(step);        // red words (full screen)
-  escalatePopups(step);   // popups (behind)
+
+  burstOnce(step);       // red words (full screen)
+
+  // subtle first two clicks: NO popups until step >= 2
+  if (step >= 2) escalatePopups(step);
 
   cb.disabled = true;
   setTimeout(() => {
@@ -70,23 +84,26 @@ cb.addEventListener('change', () => {
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition();    // glitchier ending
+      endTransition();   // glitchy red system breakdown
     }
   }, 260);
 });
 
 function flashBang(){ flash.classList.add('flash'); setTimeout(()=> flash.classList.remove('flash'), 200); }
 
-/* FULL-VIEW bursts so they reach top and bottom */
+/* FULL-VIEW bursts — lighter for first two clicks */
 function burstOnce(i){
   const rect = { left: -0.08*innerWidth, top: -0.12*innerHeight, width: innerWidth*1.16, height: innerHeight*1.24 };
   const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
   const intensity = i + 1;
-  const count     = 22 + intensity*12;           // dense
-  const delay     = Math.max(8, 70 - intensity*9);
-  const durMs     = 1500 + intensity*650;        // linger
-  const scaleMin  = 1 + intensity*0.12;
-  const scaleMax  = 1 + intensity*0.30;
+
+  // dial back first two clicks
+  const baseCount = (i < 2) ? 10 : 22;  // subtle early
+  const count     = baseCount + intensity*12;
+  const delay     = Math.max(12, 70 - intensity*9);
+  const durMs     = (i < 2) ? 1200 : 1500 + intensity*650;
+  const scaleMin  = 1 + intensity*0.10;
+  const scaleMax  = 1 + intensity*0.28;
 
   for (let k=0; k<count; k++){
     setTimeout(() => spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.2), rand(scaleMin, scaleMax)), k*delay);
@@ -105,18 +122,18 @@ function spawnGhost(rect, text, dur=1300, scale=1){
   setTimeout(()=> g.remove(), dur + 150);
 }
 
-/* popups behind control — bigger/closer/more per step; also full-screen placement */
+/* popups behind control — start at step 3 (index 2), then escalate */
 function escalatePopups(i){
   const intensity = i + 1;
-  const n = (intensity>=2?1:0) + (intensity>=3?1:0) + (intensity>=4?2:0) + (intensity>=5?4:0);
+  const n = (intensity>=3?1:0) + (intensity>=4?1:0) + (intensity>=5?2:0) + (intensity>=6?4:0);
   for(let k=0;k<n;k++){ setTimeout(()=> spawnPopup(intensity, k===0), k*120); }
 }
 
 function spawnPopup(intensity=1, scare=false){
   const p=document.createElement('div'); p.className='popup'+(scare?' scare':'');
   const payloads=[
-    ["SYSTEM NOTICE","Install Trust Pack to continue.","[ ACCEPT ]   [ ACCEPT ]"],
     ["CONSENT UPDATE","Improved privacy experience available.","Click AGREE to activate."],
+    ["SYSTEM NOTICE","Install Trust Pack to continue.","[ ACCEPT ]   [ ACCEPT ]"],
     ["SECURITY CHECK","Unusual activity detected.","Verify identity by agreeing again."],
     ["OPTIMISER","We can make this faster.","Enable automatic agreement."]
   ];
@@ -124,7 +141,7 @@ function spawnPopup(intensity=1, scare=false){
   p.innerHTML=`<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
                <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
 
-  // place anywhere within the full-bleed ghostLayer
+  // anywhere within full-bleed layer, gravitating to center as intensity rises
   const r=ghostLayer.getBoundingClientRect();
   const bias=Math.max(0.5-intensity*0.08,0.12);
   const cx=r.left+r.width*(0.5+(Math.random()*bias*2-bias));
@@ -138,24 +155,29 @@ function spawnPopup(intensity=1, scare=false){
   setTimeout(()=> p.remove(), 2600 + intensity*450);
 }
 
-/* ====== GLITCHIER END (RGB split + surgical + slices + long red) ====== */
+/* ====== GLITCHY RED END (no surgery lines) ====== */
 function endTransition(){
+  // 1) quick white scanline glitch
   glitchEl.classList.remove('hidden'); glitchEl.classList.add('on');
-  surgicalEl.classList.remove('hidden'); surgicalEl.classList.add('on');
-  ekg.classList.remove('hidden'); ekg.classList.add('show');
-  setTimeout(()=>{ slicesEl.classList.remove('hidden'); slicesEl.classList.add('on'); }, 160);
-  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 300);
-  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 480);
 
+  // 2) rgb split hit
+  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
+
+  // 3) red wash with plateau
+  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 420);
+
+  // 4) hide UI → show only final line
   setTimeout(()=>{
-    wrap.classList.add('endmode');             // hide UI
+    wrap.classList.add('endmode');
     endScreen.classList.remove('hidden');
     requestAnimationFrame(()=> endScreen.classList.add('show'));
-  }, 3300);
+  }, 3200);
 
+  // 5) auto reload
   setTimeout(()=> location.reload(), 10000);
 }
 
 /* helpers */
 function rand(min,max){ return min + Math.random()*(max-min); }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
