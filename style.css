@@ -10,7 +10,7 @@ body{
 /* layout */
 .wrap{ height:100vh; width:100vw; display:grid; grid-template-rows:auto 1fr; }
 .mast{ text-align:center; padding-top:24px }
-.big,.sub{ display:none } /* keep only the instruction visible */
+.big,.sub{ display:none } /* hide the big titles; keep instruction only */
 .lead{ color:#ff3b3b; font-weight:800; font-size:clamp(22px,4vw,42px); letter-spacing:.08em }
 
 /* stage */
@@ -28,8 +28,7 @@ body{
 
 /* consent control (always on top) */
 .agree-container{
-  position: relative;
-  z-index: 1000;
+  position: relative; z-index: 1000;
   display: flex; align-items: center; gap: 36px;
 }
 #agree{
@@ -51,7 +50,6 @@ body{
   font-weight:800; letter-spacing:.10em;
   font-size:clamp(28px,4.8vw,54px);
   white-space:nowrap; cursor:pointer;
-  /* thin white stroke + soft glow so it stays readable over chaos */
   -webkit-text-stroke:0.6px rgba(255,255,255,.55);
   text-shadow:0 0 10px rgba(255,255,255,.08), 0 0 20px rgba(255,255,255,.05);
 }
@@ -79,7 +77,7 @@ body{
   width:min(440px,62vw);
   background:#0b0b0b; border:2px solid #fff;
   box-shadow:0 14px 60px rgba(0,0,0,.9);
-  z-index: 2; /* still behind control */
+  z-index: 2; /* behind control */
   transform:translate(-50%,-50%) scale(var(--popupScale,1)) rotate(var(--rot,0deg));
   animation:popIn .16s ease forwards;
   pointer-events:none;
@@ -96,17 +94,21 @@ body{
 .popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800 }
 .popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
-/* ending overlays */
-.glitch{ position:fixed; inset:0; z-index:35; pointer-events:none; background:
-  repeating-linear-gradient(0deg, #fff0 0 2px, #fff1 2px 3px); opacity:0; }
-.glitch.on{ animation:glitch .7s ease forwards }
-@keyframes glitch{
-  0%{ opacity:0; filter:hue-rotate(0) contrast(1) }
-  20%{ opacity:.25; transform:translate(-3px,1px) }
-  40%{ opacity:.4;  transform:translate(4px,-2px) }
-  60%{ opacity:.2;  transform:translate(-2px,2px) }
-  80%{ opacity:.35; transform:translate(2px,-1px) }
-  100%{ opacity:0; transform:none; filter:hue-rotate(10deg) contrast(1.15) }
+/* ====== ENDING: red system crash (no white lines) ====== */
+/* red jitter (no stripes) */
+.glitch{
+  position:fixed; inset:0; z-index:35; pointer-events:none;
+  background: rgba(255,0,0,.08);
+  opacity:0; filter: contrast(1.2) saturate(1.1) blur(.4px);
+}
+.glitch.on{ animation:glitchRed .55s ease-out forwards }
+@keyframes glitchRed{
+  0%{   opacity:0;   transform:none }
+  15%{  opacity:.35; transform: translate(-2px,1px) scale(1.003) }
+  35%{  opacity:.55; transform: translate(3px,-2px) skewX(.4deg) }
+  55%{  opacity:.45; transform: translate(-3px,2px) skewY(.4deg) }
+  75%{  opacity:.6;  transform: translate(2px,-1px) scale(1.01) }
+  100%{ opacity:0;   transform:none }
 }
 
 /* RGB split hit */
@@ -121,10 +123,41 @@ body{
 .rgb::before, .rgb::after{ content:""; position:absolute; inset:0;
   background:linear-gradient(90deg, rgba(0,255,255,.18), rgba(255,0,0,.18)) }
 
+/* blocky tear artifacts */
+.blocks{ position:fixed; inset:-4vh -4vw; z-index:36; pointer-events:none; }
+.block{
+  position:absolute; background:rgba(255,42,42,.22);
+  box-shadow:0 0 18px rgba(255,42,42,.25);
+  mix-blend-mode:screen; opacity:0;
+  animation:blockGlitch 900ms cubic-bezier(.2,.6,.2,1) forwards;
+}
+@keyframes blockGlitch{
+  0%   { opacity:0; transform:translate(var(--sx),var(--sy)) scale(1) }
+  15%  { opacity:.9 }
+  60%  { opacity:.7; transform:translate(calc(var(--sx)*-0.6),calc(var(--sy)*0.6)) scale(1.08) }
+  100% { opacity:0;  transform:translate(calc(var(--sx)*-1.1),calc(var(--sy)*1.1)) scale(1.18) }
+}
+
+/* red pulse burst */
+.crash{
+  position:fixed; inset:0; z-index:38; pointer-events:none;
+  background: radial-gradient(circle at 50% 55%, rgba(255,42,42,0) 0 28%, rgba(255,42,42,.55) 55%, rgba(255,0,0,.9) 100%);
+  filter: blur(6px) contrast(1.2);
+  opacity:0;
+}
+.crash.on{ animation:crashPulse 1.35s ease-out forwards }
+@keyframes crashPulse{
+  0%   { opacity:0;   transform:scale(1) }
+  22%  { opacity:.55; transform:scale(1.02) }
+  48%  { opacity:.9;  transform:scale(1.06) }
+  80%  { opacity:.6;  transform:scale(1.1) }
+  100% { opacity:0;   transform:scale(1.12) }
+}
+
 /* long red wash */
 .redwash{ position:fixed; inset:0; background:var(--red); opacity:0; z-index:37; pointer-events:none }
-.redwash.on{ animation:redwash 3.2s ease forwards }
-@keyframes redwash{ 0%{opacity:0} 25%{opacity:.35} 50%{opacity:.72} 65%{opacity:.72} 100%{opacity:0} }
+.redwash.on{ animation:redwash 3.4s ease forwards }
+@keyframes redwash{ 0%{opacity:0} 25%{opacity:.35} 55%{opacity:.78} 70%{opacity:.78} 100%{opacity:0} }
 
 /* end screen */
 .end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:40; opacity:0; transition:opacity 1.4s ease }
@@ -156,6 +189,5 @@ body{ cursor:none !important }
 }
 
 /* FINAL SAFETY: overlays never block clicks; control always wins */
-#flash, #ghostLayer, .ghost, .popup, #glitch, #rgb, #redwash { pointer-events: none !important; }
+#flash, #ghostLayer, .ghost, .popup, #glitch, #rgb, #redwash, #blocks, #crash { pointer-events: none !important; }
 .agree-container, #agree, #agreeLabel { position: relative !important; z-index: 9999 !important; pointer-events: auto !important; }
-
