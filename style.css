@@ -71,48 +71,39 @@ body{
 .popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800; cursor:default }
 .popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
-/* EKG trace + overlays (ending) */
-.ekg{ position:fixed; left:0; right:0; top:18vh; width:100vw; height:120px; z-index:38; opacity:0; }
-.ekg.show{ animation:ekgFade 2.2s ease forwards } @keyframes ekgFade{ 0%{opacity:0} 10%{opacity:1} 70%{opacity:1} 100%{opacity:0} }
-
-.surgical{ position:fixed; inset:0; z-index:34; pointer-events:none; background:rgba(0,255,166,.06); mix-blend-mode:screen; opacity:0; }
-.surgical.on{ animation:surg 1.1s ease forwards }
-@keyframes surg{ 0%{opacity:0} 25%{opacity:.8} 60%{opacity:.4} 100%{opacity:0} }
-.surgical::after{ content:""; position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(0,255,166,.0) 0 2px, rgba(0,255,166,.18) 2px 3px); mix-blend-mode:screen; opacity:.35; }
-
-.slices{ position:fixed; inset:0; z-index:37; pointer-events:none; opacity:0 }
-.slices.on{ animation:sliceShow 0.9s ease forwards } @keyframes sliceShow{ 0%{opacity:0} 100%{opacity:1} }
-.slices::before, .slices::after{
-  content:""; position:absolute; left:-5vw; right:-5vw; height:3px; background:#fff; box-shadow:0 0 22px rgba(255,255,255,.45);
+/* ending overlays */
+.glitch{ position:fixed; inset:0; z-index:35; pointer-events:none; background:
+  repeating-linear-gradient(0deg, #fff0 0 2px, #fff1 2px 3px); opacity:0; }
+.glitch.on{ animation:glitch .7s ease forwards }
+@keyframes glitch{
+  0%{ opacity:0; filter:hue-rotate(0) contrast(1) }
+  20%{ opacity:.25; transform:translate(-3px,1px) }
+  40%{ opacity:.4;  transform:translate(4px,-2px) }
+  60%{ opacity:.2;  transform:translate(-2px,2px) }
+  80%{ opacity:.35; transform:translate(2px,-1px) }
+  100%{ opacity:0; transform:none; filter:hue-rotate(10deg) contrast(1.15) }
 }
-.slices::before{ top:35vh; animation:cut1 0.9s ease forwards }
-.slices::after{  top:55vh; animation:cut2 0.9s ease forwards }
-@keyframes cut1{ 0%{transform:translateX(-4vw)} 60%{transform:translateX(6vw)} 100%{transform:translateX(0)} }
-@keyframes cut2{ 0%{transform:translateX(4vw)} 60%{transform:translateX(-5vw)} 100%{transform:translateX(0)} }
-
-/* RGB split overlay */
 .rgb{ position:fixed; inset:-2vh -2vw; z-index:36; pointer-events:none; opacity:0; mix-blend-mode:screen; }
-.rgb.on{ animation:rgbSplit 0.45s ease forwards }
+.rgb.on{ animation:rgbSplit .45s ease forwards }
 @keyframes rgbSplit{
   0%{ opacity:0; filter:none; transform:none }
   20%{ opacity:.45; filter:contrast(1.2) saturate(1.1); transform:translate(2px,-2px) }
   50%{ opacity:.6;  filter:hue-rotate(10deg) contrast(1.3); transform:translate(-3px,2px) skewX(0.4deg) }
   100%{ opacity:0; filter:none; transform:none }
 }
-.rgb::before, .rgb::after{
-  content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,255,255,.18), rgba(255,0,0,.18));
-}
+.rgb::before, .rgb::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(0,255,255,.18), rgba(255,0,0,.18)); }
+
+/* long red wash */
+.redwash{ position:fixed; inset:0; background:var(--red); opacity:0; z-index:36; pointer-events:none; }
+.redwash.on{ animation:redwash 3.2s ease forwards }
+@keyframes redwash{ 0%{opacity:0} 25%{opacity:.35} 50%{opacity:.72} 65%{opacity:.72} 100%{opacity:0} }
 
 /* end screen */
 .end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:40; opacity:0; transition:opacity 1.4s ease; font-family:inherit; }
 .end.show{ opacity:1 }
 .hidden{ display:none }
 .endtext{ font-size:clamp(14px,2.2vw,22px); color:#fff; text-align:center; max-width:80vw }
-
-/* long red wash */
-.redwash{ position:fixed; inset:0; background:var(--red); opacity:0; z-index:36; pointer-events:none; }
-.redwash.on{ animation:redwash 3.2s ease forwards }
-@keyframes redwash{ 0%{opacity:0} 25%{opacity:.35} 50%{opacity:.72} 65%{opacity:.72} 100%{opacity:0} }
 
 /* end mode: hide UI, show only final line */
 .wrap.endmode #mast, .wrap.endmode #center { display:none }
@@ -122,3 +113,11 @@ body{
   box-shadow:0 0 18px rgba(255,255,255,.35); mix-blend-mode:difference; pointer-events:none; transform:translate(-50%,-50%); z-index:999;
   transition:width .2s,height .2s,background .2s,box-shadow .3s; }
 .interactive-hover #cursor{ background:rgba(255,42,42,.9); box-shadow:0 0 30px rgba(255,42,42,.4); width:44px; height:44px; }
+
+/* mute button */
+.muter{
+  position:fixed; top:12px; right:12px; z-index:1000;
+  background:#111; color:#fff; border:1px solid #fff; padding:6px 10px;
+  font-family:inherit; font-size:12px; text-transform:none; cursor:pointer;
+}
+.muter[aria-pressed="true"]{ background:#300; border-color:#ff2a2a; }  /* muted */
