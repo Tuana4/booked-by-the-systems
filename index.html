@@ -13,17 +13,12 @@
   <!-- overlays -->
   <div id="flash"></div>
   <div id="glitch" class="glitch hidden"></div>
-  <div id="surgical" class="surgical hidden"></div>   <!-- NEW: surgical green/scanlines -->
-  <div id="slices"   class="slices hidden"></div>     <!-- NEW: misaligned cuts -->
+  <div id="rgb" class="rgb hidden"></div>
   <div id="redwash" class="redwash hidden"></div>
 
-  <!-- heartbeat trace (only shown during ending) -->
-  <svg id="ekg" class="ekg hidden" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true">
-    <polyline id="ekgLine" points="
-      0,120 150,120 180,60 200,180 220,120 400,120
-      430,70 450,180 470,120 650,120 900,120 1200,120"
-      fill="none" stroke="#00ffa6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-  </svg>
+  <!-- mute (sound is optional; starts muted) -->
+  <button id="muteBtn" class="muter" aria-pressed="true" aria-label="Toggle sound">🔇 sound off</button>
+  <audio id="sndClick" src="sounds/click1.mp3" preload="auto"></audio>
 
   <main class="wrap" id="wrap">
     <header class="mast" id="mast">
@@ -33,13 +28,17 @@
     </header>
 
     <section class="center" id="center">
+      <!-- FULL-SCREEN background words / popups (behind control) -->
       <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
+
+      <!-- consent control (always on top) -->
       <div class="agree-container" id="agreeWrap">
         <input type="checkbox" id="agree" />
         <label for="agree" id="agreeLabel">I AGREE</label>
       </div>
     </section>
 
+    <!-- end: ONLY this line remains -->
     <section id="end" class="end hidden" aria-live="polite">
       <p class="endtext">you shouldn’t have agreed to something you never read.</p>
     </section>
@@ -48,4 +47,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
