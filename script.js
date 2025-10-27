@@ -1,21 +1,19 @@
-// elements
-const wrap = document.getElementById('wrap');
-const centerEl = document.getElementById('center');
+// grabs
+const wrap       = document.getElementById('wrap');
+const centerEl   = document.getElementById('center');
 const ghostLayer = document.getElementById('ghostLayer');
-const cb = document.getElementById('agree');
-const label = document.getElementById('agreeLabel');
-const flash = document.getElementById('flash');
-const glitchEl = document.getElementById('glitch');
-const rgbEl = document.getElementById('rgb');
-const redwashEl = document.getElementById('redwash');
-const endScreen = document.getElementById('end');
-const cursorEl = document.getElementById('cursor');
-const muteBtn = document.getElementById('muteBtn');
-const sndClick = document.getElementById('sndClick');
+const cb         = document.getElementById('agree');
+const label      = document.getElementById('agreeLabel');
+const flash      = document.getElementById('flash');
+const glitchEl   = document.getElementById('glitch');
+const rgbEl      = document.getElementById('rgb');
+const redwashEl  = document.getElementById('redwash');
+const endScreen  = document.getElementById('end');
+const cursorEl   = document.getElementById('cursor');
 
-/* LONGER “I AGREE” SEQUENCE (same size/position) */
+/* LONGER “I AGREE …” sequence (same size/position) */
 const phrases = [
- "I AGREE",
+  "I AGREE",
   "I STILL AGREE",
   "I CONTINUE TO AGREE",
   "I AGREE AGAIN",
@@ -26,8 +24,9 @@ const phrases = [
   "I AGREE TO YOUR TERMS",
   "I AGREE TO ALL FUTURE AGREEMENTS",
   "I AGREE WITHOUT READING", 
+];
 
-/* escalating AI-ish sets (used for red bursts) */
+/* red burst vocab (escalates) */
 const burstsByStep = [
   ["consent recorded","trace detected","data syncing"],
   ["compliance verified","visibility confirmed","profiling initiated","session id: 214—active"],
@@ -40,144 +39,142 @@ const burstsByStep = [
 let step = 0;
 label.textContent = phrases[step];
 
-/* ensure control is clickable above everything */
-cb.style.zIndex = 51; label.style.zIndex = 51; ghostLayer.style.zIndex = 1;
+/* guarantee label toggles checkbox even if overlapped */
+label.addEventListener('click', (e)=>{
+  e.preventDefault();
+  if (cb.disabled) return;
+  cb.checked = true;
+  cb.dispatchEvent(new Event('change'));
+});
 
-/* custom cursor + hover state */
-document.addEventListener('mousemove', (e)=>{ cursorEl.style.left = e.clientX+'px'; cursorEl.style.top  = e.clientY+'px'; });
+/* custom cursor & interactive highlight */
+document.addEventListener('mousemove', (e)=>{
+  cursorEl.style.left = `${e.clientX}px`;
+  cursorEl.style.top  = `${e.clientY}px`;
+});
 ['mousemove','mouseover','mouseout'].forEach(evt=>{
   document.addEventListener(evt, e=>{
-    const t=e.target; const interactive=t.tagName==='INPUT'||t.tagName==='LABEL'||t.closest('label');
+    const t = e.target;
+    const interactive = t.tagName === 'INPUT' || t.tagName === 'LABEL' || t.closest('label');
     document.body.classList.toggle('interactive-hover', !!interactive);
   });
 });
 
-/* sound (optional, starts muted) */
-let muted = true;
-muteBtn.addEventListener('click', ()=>{
-  muted = !muted;
-  muteBtn.setAttribute('aria-pressed', String(muted));
-  muteBtn.textContent = muted ? '🔇 sound off' : '🔊 sound on';
-});
-function blip(){
-  if (muted || !sndClick) return;
-  try { sndClick.pause(); sndClick.currentTime = 0; sndClick.volume = 0.45; sndClick.playbackRate = 1; sndClick.play(); } catch(e){}
-}
+/* main interaction */
+cb.addEventListener('change', ()=>{
+  if (!cb.checked) return;
 
-/* interaction logic */
-cb.addEventListener('change', () => {
-  if(!cb.checked) return;
-
-  blip();                // soft click sound
   flashBang();
+  burstOnce(step);                 // red words (full-screen)
 
-  burstOnce(step);       // red words (full screen)
-
-  // subtle first two clicks: NO popups until step >= 2
+  // First two clicks: subtle (no popups). From 3rd click: escalate.
   if (step >= 2) escalatePopups(step);
 
   cb.disabled = true;
-  setTimeout(() => {
+  setTimeout(()=>{
     step++;
-    if (step < phrases.length) {
+    if (step < phrases.length){
       label.textContent = phrases[step];
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition();   // glitchy red system breakdown
+      endTransition();             // glitchy red breakdown → final line
     }
   }, 260);
 });
 
-function flashBang(){ flash.classList.add('flash'); setTimeout(()=> flash.classList.remove('flash'), 200); }
+/* effects */
+function flashBang(){
+  flash.classList.add('flash');
+  setTimeout(()=> flash.classList.remove('flash'), 200);
+}
 
 /* FULL-VIEW bursts — lighter for first two clicks */
 function burstOnce(i){
-  const rect = { left: -0.08*innerWidth, top: -0.12*innerHeight, width: innerWidth*1.16, height: innerHeight*1.24 };
-  const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
+  const rect = { left: -0.10*innerWidth, top: -0.14*innerHeight, width: innerWidth*1.20, height: innerHeight*1.28 };
+  const set  = burstsByUG(i);
   const intensity = i + 1;
 
-  // dial back first two clicks
-  const baseCount = (i < 2) ? 10 : 22;  // subtle early
-  const count     = baseCount + intensity*12;
+  const baseCount = (i < 2) ? 10 : 24;          // subtle first two
+  const count     = baseCount + intensity*12;   // then ramp
   const delay     = Math.max(12, 70 - intensity*9);
-  const durMs     = (i < 2) ? 1200 : 1500 + intensity*650;
+  const durMs     = (i < 2) ? 1100 : 1500 + intensity*650;
   const scaleMin  = 1 + intensity*0.10;
-  const scaleMax  = 1 + intensity*0.28;
+  const scaleMax  = 1 + intensity*0.30;
 
   for (let k=0; k<count; k++){
-    setTimeout(() => spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.2), rand(scaleMin, scaleMax)), k*delay);
+    setTimeout(()=> spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.2), rand(scaleMin, scaleMax)), k*delay);
   }
 }
+function burstsByUG(i){ return burstsByStep[Math.min(i, burstsByStep.length-1)]; }
 
 function spawnGhost(rect, text, dur=1300, scale=1){
-  const g=document.createElement('div'); g.className='ghost'; g.textContent=text;
+  const g = document.createElement('div');
+  g.className = 'ghost';
+  g.textContent = text;
   const x = rect.left + Math.random()*rect.width;
   const y = rect.top  + Math.random()*rect.height;
-  g.style.left = x + 'px'; g.style.top = y + 'px';
-  g.style.setProperty('--r', (Math.random()*12-6)+'deg');
-  g.style.setProperty('--dur', dur+'ms');
+  g.style.left = `${x}px`;
+  g.style.top  = `${y}px`;
+  g.style.setProperty('--r',  `${(Math.random()*12-6)}deg`);
+  g.style.setProperty('--dur', `${dur}ms`);
   g.style.transform += ` scale(${scale})`;
   ghostLayer.appendChild(g);
   setTimeout(()=> g.remove(), dur + 150);
 }
 
-/* popups behind control — start at step 3 (index 2), then escalate */
+/* popups behind control — start at step 3, then escalate */
 function escalatePopups(i){
   const intensity = i + 1;
   const n = (intensity>=3?1:0) + (intensity>=4?1:0) + (intensity>=5?2:0) + (intensity>=6?4:0);
-  for(let k=0;k<n;k++){ setTimeout(()=> spawnPopup(intensity, k===0), k*120); }
+  for (let k=0; k<n; k++){
+    setTimeout(()=> spawnPopup(intensity, k===0), k*120);
+  }
 }
-
 function spawnPopup(intensity=1, scare=false){
-  const p=document.createElement('div'); p.className='popup'+(scare?' scare':'');
-  const payloads=[
-    ["CONSENT UPDATE","Improved privacy experience available.","Click AGREE to activate."],
-    ["SYSTEM NOTICE","Install Trust Pack to continue.","[ ACCEPT ]   [ ACCEPT ]"],
-    ["SECURITY CHECK","Unusual activity detected.","Verify identity by agreeing again."],
-    ["OPTIMISER","We can make this faster.","Enable automatic agreement."]
+  const p = document.createElement('div');
+  p.className = 'popup' + (scare ? ' scare' : '');
+  const payloads = [
+    ["CONSENT UPDATE","Improved privacy experience available.","CLICK AGREE TO ACTIVATE."],
+    ["SYSTEM NOTICE","INSTALL TRUST PACK TO CONTINUE.","[ ACCEPT ]   [ ACCEPT ]"],
+    ["SECURITY CHECK","UNUSUAL ACTIVITY DETECTED.","VERIFY IDENTITY BY AGREEING AGAIN."],
+    ["OPTIMISER","WE CAN MAKE THIS FASTER.","ENABLE AUTOMATIC AGREEMENT."]
   ];
-  const [title,l1,l2]=pick(payloads);
-  p.innerHTML=`<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
-               <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
+  const [title,l1,l2] = pick(payloads);
+  p.innerHTML =
+    `<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
+     <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
 
-  // anywhere within full-bleed layer, gravitating to center as intensity rises
-  const r=ghostLayer.getBoundingClientRect();
-  const bias=Math.max(0.5-intensity*0.08,0.12);
-  const cx=r.left+r.width*(0.5+(Math.random()*bias*2-bias));
-  const cy=r.top+r.height*(0.5+(Math.random()*bias*2-bias));
-  p.style.left=cx+'px'; p.style.top=cy+'px';
+  // place anywhere in full-bleed layer; drift toward center as intensity rises
+  const r = ghostLayer.getBoundingClientRect();
+  const bias = Math.max(0.5 - intensity*0.08, 0.12);
+  const cx = r.left + r.width  * (0.5 + (Math.random()*bias*2 - bias));
+  const cy = r.top  + r.height * (0.5 + (Math.random()*bias*2 - bias));
+  p.style.left = `${cx}px`;
+  p.style.top  = `${cy}px`;
 
   p.style.setProperty('--popupScale', (1 + intensity*0.26).toFixed(2));
-  p.style.setProperty('--rot', (Math.random()*6 - 3) * (1 + intensity*0.12) + 'deg');
+  p.style.setProperty('--rot', `${(Math.random()*6 - 3) * (1 + intensity*0.12)}deg`);
 
   ghostLayer.appendChild(p);
   setTimeout(()=> p.remove(), 2600 + intensity*450);
 }
 
-/* ====== GLITCHY RED END (no surgery lines) ====== */
+/* GLITCHY RED END (no extra lines) */
 function endTransition(){
-  // 1) quick white scanline glitch
-  glitchEl.classList.remove('hidden'); glitchEl.classList.add('on');
+  glitchEl.classList.remove('hidden'); glitchEl.classList.add('on');     // scanline glitch
+  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);  // RGB split
+  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 420); // long red wash
 
-  // 2) rgb split hit
-  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
-
-  // 3) red wash with plateau
-  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 420);
-
-  // 4) hide UI → show only final line
   setTimeout(()=>{
-    wrap.classList.add('endmode');
+    wrap.classList.add('endmode');                       // hide UI
     endScreen.classList.remove('hidden');
-    requestAnimationFrame(()=> endScreen.classList.add('show'));
+    requestAnimationFrame(()=> endScreen.classList.add('show')); // smooth fade in
   }, 3200);
 
-  // 5) auto reload
-  setTimeout(()=> location.reload(), 10000);
+  setTimeout(()=> location.reload(), 10000);             // loop
 }
 
 /* helpers */
-function rand(min,max){ return min + Math.random()*(max-min); }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
+function rand(min,max){ return min + Math.random()*(max-min) }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
