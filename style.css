@@ -10,65 +10,90 @@ body{
 /* layout */
 .wrap{ height:100vh; width:100vw; display:grid; grid-template-rows:auto 1fr; }
 .mast{ text-align:center; padding-top:24px }
-.big,.sub{ display:none }
-.lead{ color:#ff3b3b; font-size:clamp(20px,3.6vw,38px); letter-spacing:.7px; margin-top:6px }
+.big,.sub{ display:none } /* keep only the instruction visible */
+.lead{ color:#ff3b3b; font-weight:800; font-size:clamp(22px,4vw,42px); letter-spacing:.08em }
 
 /* stage */
-.center{ position:relative; display:grid; place-items:center; height:calc(100vh - 76px); padding:12px; }
+.center{ position:relative; display:grid; place-items:center; height:calc(100vh - 70px); }
 
-/* FULL-SCREEN background layer (bleeds past edges) */
+/* FULL-SCREEN background layer (bleeds past edges, no clipping) */
 .ghostLayer{
   position: fixed;
-  inset: -12vh -8vw;      /* extend above top & below bottom */
+  inset: -14vh -10vw;   /* extend above/below/left/right so text can spill */
   z-index: 1;
   pointer-events: none;
-  overflow: visible;       /* no clipping */
-  font-family:inherit;
+  overflow: visible;
+  font-family: inherit;
 }
 
-/* control (top layer) */
-.agree-container{ position:relative; z-index:50; display:flex; align-items:center; justify-content:center; gap:36px; padding:8px 16px; }
+/* consent control (always on top) */
+.agree-container{
+  position: relative;
+  z-index: 1000;
+  display: flex; align-items: center; gap: 36px;
+}
 #agree{
-  appearance:none; -webkit-appearance:none; width:56px; height:56px; border:3px solid var(--ink); border-radius:2px;
-  background:transparent; display:grid; place-items:center; cursor:pointer; transition:transform .1s ease; box-sizing:border-box;
+  appearance:none; -webkit-appearance:none;
+  width:56px; height:56px; border:3px solid var(--ink); border-radius:2px;
+  background:transparent; display:grid; place-items:center;
+  cursor:pointer; transition:transform .1s ease;
 }
 #agree:active{ transform:scale(.97) }
-#agree::before{ content:"✓"; font-weight:800; font-size:34px; line-height:1; opacity:0; transform:scale(.7); transition:transform .12s ease, opacity .12s ease; }
+#agree::before{
+  content:"✓"; font-weight:800; font-size:34px; line-height:1;
+  opacity:0; transform:scale(.7);
+  transition:transform .12s ease, opacity .12s ease;
+}
 #agree:checked::before{ opacity:1; transform:scale(1) }
 #agree:disabled{ border-color:#bfbfbf; cursor:default }
+
 #agreeLabel{
-  font-weight:800; letter-spacing:.08em; font-size:clamp(26px,4.6vw,52px); white-space:nowrap; cursor:pointer;
-  -webkit-text-stroke:.6px rgba(255,255,255,.55);
+  font-weight:800; letter-spacing:.10em;
+  font-size:clamp(28px,4.8vw,54px);
+  white-space:nowrap; cursor:pointer;
+  /* thin white stroke + soft glow so it stays readable over chaos */
+  -webkit-text-stroke:0.6px rgba(255,255,255,.55);
   text-shadow:0 0 10px rgba(255,255,255,.08), 0 0 20px rgba(255,255,255,.05);
 }
 
 /* click flash */
 #flash{ position:fixed; inset:0; background:var(--red); opacity:0; pointer-events:none; z-index:30 }
-.flash{ animation:flash .18s ease } @keyframes flash{ 0%{opacity:.45} 100%{opacity:0} }
+.flash{ animation:flash .18s ease }
+@keyframes flash{ 0%{opacity:.45} 100%{opacity:0} }
 
 /* red word ghosts */
 .ghost{
-  position:absolute; color:var(--red); font-weight:800; font-size:clamp(12px,2.6vw,26px);
-  opacity:0; white-space:nowrap; transform:translateY(10px) rotate(var(--r,0deg));
-  animation:ghost var(--dur,1300ms) ease forwards; text-shadow:0 0 8px #ff2a2a30; pointer-events:none;
+  position:absolute; color:var(--red); font-weight:800;
+  font-size:clamp(12px,2.6vw,26px);
+  opacity:0; white-space:nowrap;
+  transform:translateY(10px) rotate(var(--r,0deg));
+  animation:ghost var(--dur,1300ms) ease forwards;
+  text-shadow:0 0 8px #ff2a2a30;
+  pointer-events:none;
 }
 @keyframes ghost{ 6%{opacity:1} 85%{opacity:1} 100%{opacity:0; transform:translateY(-12px)} }
 
-/* popups behind control */
+/* popups (behind control) */
 .popup{
-  position:absolute; left:50%; top:50%; width:min(440px,62vw); background:#0b0b0b; border:2px solid #fff;
-  box-shadow:0 14px 60px rgba(0,0,0,.9); z-index:1; transform:translate(-50%,-50%) scale(var(--popupScale,1)) rotate(var(--rot,0deg));
-  animation:popIn .16s ease forwards; pointer-events:none; font-family:inherit;
+  position:absolute; left:50%; top:50%;
+  width:min(440px,62vw);
+  background:#0b0b0b; border:2px solid #fff;
+  box-shadow:0 14px 60px rgba(0,0,0,.9);
+  z-index: 2; /* still behind control */
+  transform:translate(-50%,-50%) scale(var(--popupScale,1)) rotate(var(--rot,0deg));
+  animation:popIn .16s ease forwards;
+  pointer-events:none;
+  font-family: inherit;
 }
 @keyframes popIn{ from{opacity:0; transform:translate(-50%,-50%) scale(.85)} to{opacity:1; transform:translate(-50%,-50%) scale(1)} }
-.popup.scare{ animation:popIn .12s ease forwards, borderFlash .28s ease-in-out 2; }
+.popup.scare{ animation:popIn .12s ease forwards, borderFlash .28s ease-in-out 2 }
 @keyframes borderFlash{
   0%{ border-color:#fff; box-shadow:0 0 0 rgba(255,42,42,0) }
   50%{ border-color:#ff2a2a; box-shadow:0 0 42px rgba(255,42,42,.45) }
   100%{ border-color:#fff; box-shadow:0 14px 60px rgba(0,0,0,.9) }
 }
-.pophead{ display:flex; align-items:center; justify-content:space-between; background:#141414; color:#fff; padding:8px 10px; font-size:12px; border-bottom:2px solid #fff; }
-.popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800; cursor:default }
+.pophead{ display:flex; align-items:center; justify-content:space-between; background:#141414; color:#fff; padding:8px 10px; font-size:12px; border-bottom:2px solid #fff }
+.popx{ border:2px solid #fff; background:transparent; color:#fff; padding:2px 6px; font-weight:800 }
 .popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
 /* ending overlays */
@@ -83,24 +108,26 @@ body{
   80%{ opacity:.35; transform:translate(2px,-1px) }
   100%{ opacity:0; transform:none; filter:hue-rotate(10deg) contrast(1.15) }
 }
-.rgb{ position:fixed; inset:-2vh -2vw; z-index:36; pointer-events:none; opacity:0; mix-blend-mode:screen; }
+
+/* RGB split hit */
+.rgb{ position:fixed; inset:-2vh -2vw; z-index:36; pointer-events:none; opacity:0; mix-blend-mode:screen }
 .rgb.on{ animation:rgbSplit .45s ease forwards }
 @keyframes rgbSplit{
   0%{ opacity:0; filter:none; transform:none }
-  20%{ opacity:.45; filter:contrast(1.2) saturate(1.1); transform:translate(2px,-2px) }
-  50%{ opacity:.6;  filter:hue-rotate(10deg) contrast(1.3); transform:translate(-3px,2px) skewX(0.4deg) }
+  25%{ opacity:.5; filter:contrast(1.2) saturate(1.1); transform:translate(2px,-2px) }
+  55%{ opacity:.65; filter:hue-rotate(10deg) contrast(1.35); transform:translate(-3px,2px) skewX(0.4deg) }
   100%{ opacity:0; filter:none; transform:none }
 }
 .rgb::before, .rgb::after{ content:""; position:absolute; inset:0;
-  background:linear-gradient(90deg, rgba(0,255,255,.18), rgba(255,0,0,.18)); }
+  background:linear-gradient(90deg, rgba(0,255,255,.18), rgba(255,0,0,.18)) }
 
 /* long red wash */
-.redwash{ position:fixed; inset:0; background:var(--red); opacity:0; z-index:36; pointer-events:none; }
+.redwash{ position:fixed; inset:0; background:var(--red); opacity:0; z-index:37; pointer-events:none }
 .redwash.on{ animation:redwash 3.2s ease forwards }
 @keyframes redwash{ 0%{opacity:0} 25%{opacity:.35} 50%{opacity:.72} 65%{opacity:.72} 100%{opacity:0} }
 
 /* end screen */
-.end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:40; opacity:0; transition:opacity 1.4s ease; font-family:inherit; }
+.end{ position:fixed; inset:0; display:grid; place-items:center; background:#000; z-index:40; opacity:0; transition:opacity 1.4s ease }
 .end.show{ opacity:1 }
 .hidden{ display:none }
 .endtext{ font-size:clamp(14px,2.2vw,22px); color:#fff; text-align:center; max-width:80vw }
@@ -108,16 +135,27 @@ body{
 /* end mode: hide UI, show only final line */
 .wrap.endmode #mast, .wrap.endmode #center { display:none }
 
-/* cursor */
-#cursor{ position:fixed; top:0; left:0; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.9);
-  box-shadow:0 0 18px rgba(255,255,255,.35); mix-blend-mode:difference; pointer-events:none; transform:translate(-50%,-50%); z-index:999;
-  transition:width .2s,height .2s,background .2s,box-shadow .3s; }
-.interactive-hover #cursor{ background:rgba(255,42,42,.9); box-shadow:0 0 30px rgba(255,42,42,.4); width:44px; height:44px; }
-
-/* mute button */
-.muter{
-  position:fixed; top:12px; right:12px; z-index:1000;
-  background:#111; color:#fff; border:1px solid #fff; padding:6px 10px;
-  font-family:inherit; font-size:12px; text-transform:none; cursor:pointer;
+/* custom cursor */
+#cursor{
+  position: fixed;
+  left: 50vw; top: 50vh;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 0 18px rgba(255,255,255,0.35);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  transition: width .2s, height .2s, background .2s, box-shadow .3s;
 }
-.muter[aria-pressed="true"]{ background:#300; border-color:#ff2a2a; }  /* muted */
+body{ cursor:none !important }
+.interactive-hover #cursor{
+  background: rgba(255,42,42,.9);
+  box-shadow: 0 0 30px rgba(255,42,42,.4);
+  width: 42px; height: 42px;
+}
+
+/* FINAL SAFETY: overlays never block clicks; control always wins */
+#flash, #ghostLayer, .ghost, .popup, #glitch, #rgb, #redwash { pointer-events: none !important; }
+.agree-container, #agree, #agreeLabel { position: relative !important; z-index: 9999 !important; pointer-events: auto !important; }
+
