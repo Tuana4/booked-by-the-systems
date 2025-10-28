@@ -1,44 +1,27 @@
-/* ===== GRABS ===== */
-const wrap       = document.getElementById('wrap');
-const centerEl   = document.getElementById('center');
+// elements
+const wrap = document.getElementById('wrap');
+const mast = document.getElementById('mast');
+const centerEl = document.getElementById('center');
 const ghostLayer = document.getElementById('ghostLayer');
-const cb         = document.getElementById('agree');
-const label      = document.getElementById('agreeLabel');
-const flash      = document.getElementById('flash');
-const glitchEl   = document.getElementById('glitch');
-const rgbEl      = document.getElementById('rgb');
-const redwashEl  = document.getElementById('redwash');
-const blocksEl   = document.getElementById('blocks');
-const crashEl    = document.getElementById('crash');
-const endScreen  = document.getElementById('end');
-const cursorEl   = document.getElementById('cursor');
+const cb = document.getElementById('agree');
+const label = document.getElementById('agreeLabel');
+const flash = document.getElementById('flash');
+const glitchEl = document.getElementById('glitch');
+const redwashEl = document.getElementById('redwash');
+const endScreen = document.getElementById('end');
+const cursorEl = document.getElementById('cursor');
 
-/* ===== SOUND (simple + reliable) ===== */
-const baseClick = new Audio('sound.mp3'); // make sure sound.mp3 is in the same folder
-function playAgree() {
-  try {
-    const s = baseClick.cloneNode(true); // allow overlaps
-    s.volume = 0.65;
-    s.play().catch(()=>{});
-  } catch(e){}
-}
-
-/* ===== PHRASES ===== */
+/* label sequence (kept for concept, but constant sizing) */
 const phrases = [
   "I AGREE",
   "I STILL AGREE",
   "I CONTINUE TO AGREE",
   "I AGREE AGAIN",
-  "I AGREE TO CONTINUE AGREEING",
   "I AGREE TO BEING ARCHIVED",
-  "I AGREE WITHOUT READING",
-  "I AGREE TO THE SYSTEM",
-  "I AGREE TO YOUR TERMS",
-  "I AGREE TO ALL FUTURE AGREEMENTS",
   "I AGREE WITHOUT READING"
 ];
 
-/* ===== RED BURSTS (escalates) ===== */
+/* escalating AI-ish sets */
 const burstsByStep = [
   ["consent recorded","trace detected","data syncing"],
   ["compliance verified","visibility confirmed","profiling initiated","session id: 214—active"],
@@ -51,194 +34,164 @@ const burstsByStep = [
 let step = 0;
 label.textContent = phrases[step];
 
-/* Make label always toggle checkbox even if overlapped */
-label.addEventListener('click', (e)=>{
-  e.preventDefault();
-  if (cb.disabled) return;
-  cb.checked = true;
-  cb.dispatchEvent(new Event('change'));
-});
+/* layering for clickability */
+cb.style.position = 'relative';
+cb.style.zIndex = 51;
+label.style.position = 'relative';
+label.style.zIndex = 51;
+ghostLayer.style.zIndex = 1;
 
-/* Cursor */
+/* cursor follow + hover */
 document.addEventListener('mousemove', (e)=>{
-  cursorEl.style.left = `${e.clientX}px`;
-  cursorEl.style.top  = `${e.clientY}px`;
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top  = e.clientY + 'px';
 });
-['mousemove','mouseover','mouseout'].forEach(evt=>{
-  document.addEventListener(evt, e=>{
-    const t = e.target;
-    const interactive = t.tagName === 'INPUT' || t.tagName === 'LABEL' || t.closest('label');
-    document.body.classList.toggle('interactive-hover', !!interactive);
-  });
-});
+function updateHoverState(e){
+  const t = e.target;
+  const interactive = t.tagName === 'INPUT' || t.tagName === 'LABEL' || t.closest('label');
+  document.body.classList.toggle('interactive-hover', !!interactive);
+}
+document.addEventListener('mousemove', updateHoverState);
+document.addEventListener('mouseover', updateHoverState);
+document.addEventListener('mouseout', updateHoverState);
 
-/* ===== MAIN INTERACTION ===== */
-cb.addEventListener('change', ()=>{
-  if (!cb.checked) return;
+/* interaction */
+cb.addEventListener('change', () => {
+  if(!cb.checked) return;
 
-  playAgree();                // 🔊 sound
-  flashBang();                // red flash
-  burstOnce(step);            // red words
+  flashBang();
+  burstOnce(step);        // red words behind
+  escalatePopups(step);   // popups behind
 
-  // escalate window popups behind the phrase from click #3 onward
-  if (step >= 2) escalatePopups(step);
-
+  // lock briefly
   cb.disabled = true;
-  setTimeout(()=>{
+
+  // next or end
+  setTimeout(() => {
     step++;
-    if (step < phrases.length){
+    if (step < phrases.length) {
       label.textContent = phrases[step];
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition();        // crash → end line
+      endTransition();    // glitch → long red wash → only final line
     }
   }, 260);
 });
 
-/* ===== EFFECTS ===== */
+/* effects */
 function flashBang(){
   flash.classList.add('flash');
   setTimeout(()=> flash.classList.remove('flash'), 200);
 }
 
-/* full-view bursts; gentle first two clicks */
+/* bursts get denser, faster, larger, and stay longer */
 function burstOnce(i){
-  const rect = { left: -0.10*innerWidth, top: -0.14*innerHeight, width: innerWidth*1.20, height: innerHeight*1.28 };
+  const rect = centerEl.getBoundingClientRect();
   const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
-  const intensity = i + 1;
-
-  const baseCount = (i < 2) ? 10 : 24;
-  const count     = baseCount + intensity*12;
-  const delay     = Math.max(12, 70 - intensity*9);
-  const durMs     = (i < 2) ? 1100 : 1500 + intensity*650;
-  const scaleMin  = 1 + intensity*0.10;
-  const scaleMax  = 1 + intensity*0.30;
+  const intensity = i + 1;                 // 1..6
+  const count     = 16 + intensity*10;     // more phrases
+  const delay     = Math.max(10, 70 - intensity*9); // faster spawns
+  const durMs     = 1400 + intensity*600;  // stay longer
+  const scaleMin  = 1 + intensity*0.12;
+  const scaleMax  = 1 + intensity*0.28;
 
   for (let k=0; k<count; k++){
-    setTimeout(()=> spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.2), rand(scaleMin, scaleMax)), k*delay);
+    setTimeout(() => {
+      spawnGhost(rect, pick(set), rand(durMs*0.9, durMs*1.15), rand(scaleMin, scaleMax));
+    }, k*delay);
   }
 }
-function spawnGhost(rect, text, dur=1300, scale=1){
+
+function spawnGhost(rect, text, durMs=1300, scale=1){
   const g = document.createElement('div');
   g.className = 'ghost';
   g.textContent = text;
-  const x = rect.left + Math.random()*rect.width;
-  const y = rect.top  + Math.random()*rect.height;
-  g.style.left = `${x}px`;
-  g.style.top  = `${y}px`;
-  g.style.setProperty('--r',  `${(Math.random()*12-6)}deg`);
-  g.style.setProperty('--dur', `${dur}ms`);
+
+  const padX = 60, padY = 50;
+  const x = rect.left + padX + Math.random()*(rect.width - padX*2);
+  const y = rect.top  + padY + Math.random()*(rect.height - padY*2);
+
+  g.style.left = x + 'px';
+  g.style.top  = y + 'px';
+  g.style.setProperty('--r', (Math.random()*12-6)+'deg');
+  g.style.setProperty('--dur', durMs+'ms');
   g.style.transform += ` scale(${scale})`;
-  ghostLayer.appendChild(g);
-  setTimeout(()=> g.remove(), dur + 150);
+
+  ghostLayer.appendChild(g);            // behind control
+  setTimeout(() => g.remove(), durMs + 120);
 }
 
-/* ===== POPUPS: distributed across screen (no top-left bias) ===== */
-
-/* choose quadrant cycling with jitter; drift toward center as intensity grows */
-function popupPosition(intensity, index){
-  const r = ghostLayer.getBoundingClientRect();
-  // 0..3 rotating quadrants for each popup so they spread
-  const q = (index + step) % 4;
-  let xMin = 0, xMax = 1, yMin = 0, yMax = 1;
-
-  if (q === 0){ xMin=0; xMax=0.5; yMin=0;   yMax=0.5; }        // TL
-  if (q === 1){ xMin=0.5; xMax=1; yMin=0;   yMax=0.5; }        // TR
-  if (q === 2){ xMin=0; xMax=0.5; yMin=0.5; yMax=1;   }        // BL
-  if (q === 3){ xMin=0.5; xMax=1; yMin=0.5; yMax=1;   }        // BR
-
-  // as intensity grows, bias toward center but keep randomness
-  const towardCenter = Math.min(0.45, 0.10 + intensity*0.05);
-  const cx = 0.5 + (Math.random()* (xMax-xMin) + xMin - 0.5) * (1 - towardCenter);
-  const cy = 0.5 + (Math.random()* (yMax-yMin) + yMin - 0.5) * (1 - towardCenter);
-
-  // jitter so they don't overlap exactly
-  const jitterX = (Math.random()-0.5) * 0.12;
-  const jitterY = (Math.random()-0.5) * 0.10;
-
-  const x = r.left + r.width  * clamp01(cx + jitterX);
-  const y = r.top  + r.height * clamp01(cy + jitterY);
-  return { x, y };
-}
-
+/* popups behind control — bigger/closer/more frequent per step */
 function escalatePopups(i){
   const intensity = i + 1;
-  // number of popups ramps up
-  const n = (intensity>=3?2:0) + (intensity>=4?2:0) + (intensity>=5?3:0) + (intensity>=6?4:0);
-  for (let k=0; k<n; k++){
-    setTimeout(()=> spawnPopup(intensity, k===0), k*110);
+  const popupCount =
+      (intensity >= 2 ? 1 : 0) +
+      (intensity >= 3 ? 1 : 0) +
+      (intensity >= 4 ? 2 : 0) +
+      (intensity >= 5 ? 4 : 0);
+  for(let n=0;n<popupCount;n++){
+    setTimeout(()=> spawnPopup(intensity, n===0), n*120);
   }
 }
 
-function spawnPopup(intensity=1, scare=false){
+function spawnPopup(intensity=1, doScare=false){
   const p = document.createElement('div');
-  p.className = 'popup' + (scare ? ' scare' : '');
+  p.className = 'popup' + (doScare ? ' scare' : '');
+
   const payloads = [
-    ["CONSENT UPDATE","Improved privacy experience available.","CLICK AGREE TO ACTIVATE."],
-    ["SYSTEM NOTICE","INSTALL TRUST PACK TO CONTINUE.","[ ACCEPT ]   [ ACCEPT ]"],
-    ["SECURITY CHECK","UNUSUAL ACTIVITY DETECTED.","VERIFY IDENTITY BY AGREEING AGAIN."],
-    ["OPTIMISER","WE CAN MAKE THIS FASTER.","ENABLE AUTOMATIC AGREEMENT."]
+    ["SYSTEM NOTICE","Install Trust Pack to continue.","[ ACCEPT ]   [ ACCEPT ]"],
+    ["CONSENT UPDATE","Improved privacy experience available.","Click AGREE to activate."],
+    ["SECURITY CHECK","Unusual activity detected.","Verify identity by agreeing again."],
+    ["OPTIMISER","We can make this faster.","Enable automatic agreement."]
   ];
-  const [title,l1,l2] = pick(payloads);
-  p.innerHTML =
-    `<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
-     <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
+  const [title, l1, l2] = pick(payloads);
+  p.innerHTML = `
+    <div class="pophead">
+      <span>${title}</span>
+      <button class="popx" aria-label="close">X</button>
+    </div>
+    <div class="popbody">
+      <div>${l1}</div>
+      <div style="margin-top:8px;color:#ffbfbf">${l2}</div>
+    </div>
+  `;
 
-  // distributed position
-  const pos = popupPosition(intensity, Math.floor(Math.random()*1000));
-  p.style.left = `${pos.x}px`;
-  p.style.top  = `${pos.y}px`;
+  // converge toward center as intensity rises
+  const r = ghostLayer.getBoundingClientRect();
+  const centerBias = Math.max(0.5 - intensity*0.08, 0.12); // 0.5 → 0.12
+  const cx = r.left + r.width  * (0.5 + (Math.random()*centerBias*2 - centerBias));
+  const cy = r.top  + r.height * (0.5 + (Math.random()*centerBias*2 - centerBias));
+  p.style.left = cx + 'px';
+  p.style.top  = cy + 'px';
 
-  // scale/rotation escalate
-  p.style.setProperty('--popupScale', (1 + intensity*0.26).toFixed(2));
-  p.style.setProperty('--rot', `${(Math.random()*6 - 3) * (1 + intensity*0.12)}deg`);
+  // bigger & more rotated as intensity increases
+  p.style.setProperty('--popupScale', (1 + intensity*0.24).toFixed(2));  // escalate
+  p.style.setProperty('--rot', (Math.random()*6 - 3) * (1 + intensity*0.12) + 'deg');
 
-  ghostLayer.appendChild(p);
-  setTimeout(()=> p.remove(), 2600 + intensity*450);
+  ghostLayer.appendChild(p);            // behind control
+  setTimeout(() => p.remove(), 2600 + intensity*450);
 }
 
-/* ===== END TRANSITION ===== */
+/* end transition: glitch → LONG red wash (~3.2s) → ONLY final line */
 function endTransition(){
-  glitchEl.classList.remove('hidden'); 
-  glitchEl.classList.add('on');
+  glitchEl.classList.remove('hidden');
+  redwashEl.classList.remove('hidden');
 
-  blocksEl.classList.remove('hidden');
-  spawnBlocks(20);
+  glitchEl.classList.add('on');                 // ~0.7s glitch
+  setTimeout(()=> redwashEl.classList.add('on'), 80);   // red wash w/ plateau
 
-  setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
-  setTimeout(()=>{ crashEl.classList.remove('hidden'); crashEl.classList.add('on'); }, 360);
-  setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 560);
-
+  // after the wash, hide all UI and show only the end line
   setTimeout(()=>{
-    wrap.classList.add('endmode');
+    wrap.classList.add('endmode');              // hides mast + center
     endScreen.classList.remove('hidden');
-    requestAnimationFrame(()=> endScreen.classList.add('show'));
-  }, 3600);
+    requestAnimationFrame(()=> endScreen.classList.add('show')); // smooth fade
+  }, 3200);
 
+  // auto reload
   setTimeout(()=> location.reload(), 10000);
 }
 
-/* ===== HELPERS ===== */
-function spawnBlocks(n=12){
-  const r = blocksEl.getBoundingClientRect();
-  for (let i=0;i<n;i++){
-    const b = document.createElement('div');
-    b.className = 'block';
-    const w = Math.random()*220 + 80;
-    const h = Math.random()*90  + 40;
-    const x = r.left + Math.random()*r.width  - w*0.5;
-    const y = r.top  + Math.random()*r.height - h*0.5;
-    b.style.width  = `${w}px`;
-    b.style.height = `${h}px`;
-    b.style.left   = `${x}px`;
-    b.style.top    = `${y}px`;
-    b.style.setProperty('--sx', `${(Math.random()*160-80)}px`);
-    b.style.setProperty('--sy', `${(Math.random()*120-60)}px`);
-    blocksEl.appendChild(b);
-    setTimeout(()=> b.remove(), 1100 + Math.random()*400);
-  }
-}
-function rand(min,max){ return min + Math.random()*(max-min) }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+/* helpers */
+function rand(min,max){ return min + Math.random()*(max-min); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
