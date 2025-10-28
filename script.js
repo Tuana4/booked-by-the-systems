@@ -13,6 +13,16 @@ const crashEl    = document.getElementById('crash');
 const endScreen  = document.getElementById('end');
 const cursorEl   = document.getElementById('cursor');
 
+function playAgree() {
+  if (!agreeSound) return;
+  try {
+    // clone so rapid clicks can overlap without cutting off
+    const s = agreeSound.cloneNode(true);
+    s.volume = 0.5;      // tweak if needed (0.0–1.0)
+    s.play().catch(()=>{}); // ignore if the browser blocks
+  } catch(e){}
+}
+
 /* LONGER “I AGREE …” sequence (same size/position) */
 const phrases = [
   "I AGREE",
