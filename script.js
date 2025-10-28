@@ -1,4 +1,4 @@
-// grabs
+/* ===== GRABS ===== */
 const wrap       = document.getElementById('wrap');
 const centerEl   = document.getElementById('center');
 const ghostLayer = document.getElementById('ghostLayer');
@@ -12,19 +12,18 @@ const blocksEl   = document.getElementById('blocks');
 const crashEl    = document.getElementById('crash');
 const endScreen  = document.getElementById('end');
 const cursorEl   = document.getElementById('cursor');
-const agreeSound = document.getElementById('agreeSound'); // 🔊 added
 
-// 🔊 sound helper
+/* ===== SOUND (simple + reliable) ===== */
+const baseClick = new Audio('sound.mp3'); // make sure sound.mp3 is in the same folder
 function playAgree() {
-  if (!agreeSound) return;
   try {
-    const s = agreeSound.cloneNode(true); // allow rapid overlaps
-    s.volume = 0.5;
+    const s = baseClick.cloneNode(true); // allow overlaps
+    s.volume = 0.65;
     s.play().catch(()=>{});
   } catch(e){}
 }
 
-/* LONGER “I AGREE …” sequence (same size/position) */
+/* ===== PHRASES ===== */
 const phrases = [
   "I AGREE",
   "I STILL AGREE",
@@ -39,7 +38,7 @@ const phrases = [
   "I AGREE WITHOUT READING"
 ];
 
-/* red burst vocab (escalates) */
+/* ===== RED BURSTS (escalates) ===== */
 const burstsByStep = [
   ["consent recorded","trace detected","data syncing"],
   ["compliance verified","visibility confirmed","profiling initiated","session id: 214—active"],
@@ -52,7 +51,7 @@ const burstsByStep = [
 let step = 0;
 label.textContent = phrases[step];
 
-/* guarantee label toggles checkbox even if overlapped */
+/* Make label always toggle checkbox even if overlapped */
 label.addEventListener('click', (e)=>{
   e.preventDefault();
   if (cb.disabled) return;
@@ -60,7 +59,7 @@ label.addEventListener('click', (e)=>{
   cb.dispatchEvent(new Event('change'));
 });
 
-/* custom cursor & interactive highlight */
+/* Cursor */
 document.addEventListener('mousemove', (e)=>{
   cursorEl.style.left = `${e.clientX}px`;
   cursorEl.style.top  = `${e.clientY}px`;
@@ -73,16 +72,15 @@ document.addEventListener('mousemove', (e)=>{
   });
 });
 
-/* main interaction */
+/* ===== MAIN INTERACTION ===== */
 cb.addEventListener('change', ()=>{
   if (!cb.checked) return;
 
-  playAgree(); // 🔊 play click
+  playAgree();                // 🔊 sound
+  flashBang();                // red flash
+  burstOnce(step);            // red words
 
-  flashBang();
-  burstOnce(step);                 // red words (full-screen)
-
-  // First two clicks: subtle (no popups). From 3rd click: escalate.
+  // escalate window popups behind the phrase from click #3 onward
   if (step >= 2) escalatePopups(step);
 
   cb.disabled = true;
@@ -93,25 +91,25 @@ cb.addEventListener('change', ()=>{
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition();             // red system crash → final line
+      endTransition();        // crash → end line
     }
   }, 260);
 });
 
-/* effects */
+/* ===== EFFECTS ===== */
 function flashBang(){
   flash.classList.add('flash');
   setTimeout(()=> flash.classList.remove('flash'), 200);
 }
 
-/* FULL-VIEW bursts — lighter for first two clicks */
+/* full-view bursts; gentle first two clicks */
 function burstOnce(i){
   const rect = { left: -0.10*innerWidth, top: -0.14*innerHeight, width: innerWidth*1.20, height: innerHeight*1.28 };
   const set  = burstsByStep[Math.min(i, burstsByStep.length-1)];
   const intensity = i + 1;
 
-  const baseCount = (i < 2) ? 10 : 24;          // subtle first two
-  const count     = baseCount + intensity*12;   // then ramp
+  const baseCount = (i < 2) ? 10 : 24;
+  const count     = baseCount + intensity*12;
   const delay     = Math.max(12, 70 - intensity*9);
   const durMs     = (i < 2) ? 1100 : 1500 + intensity*650;
   const scaleMin  = 1 + intensity*0.10;
@@ -136,14 +134,43 @@ function spawnGhost(rect, text, dur=1300, scale=1){
   setTimeout(()=> g.remove(), dur + 150);
 }
 
-/* popups behind control — start at step 3, then escalate */
+/* ===== POPUPS: distributed across screen (no top-left bias) ===== */
+
+/* choose quadrant cycling with jitter; drift toward center as intensity grows */
+function popupPosition(intensity, index){
+  const r = ghostLayer.getBoundingClientRect();
+  // 0..3 rotating quadrants for each popup so they spread
+  const q = (index + step) % 4;
+  let xMin = 0, xMax = 1, yMin = 0, yMax = 1;
+
+  if (q === 0){ xMin=0; xMax=0.5; yMin=0;   yMax=0.5; }        // TL
+  if (q === 1){ xMin=0.5; xMax=1; yMin=0;   yMax=0.5; }        // TR
+  if (q === 2){ xMin=0; xMax=0.5; yMin=0.5; yMax=1;   }        // BL
+  if (q === 3){ xMin=0.5; xMax=1; yMin=0.5; yMax=1;   }        // BR
+
+  // as intensity grows, bias toward center but keep randomness
+  const towardCenter = Math.min(0.45, 0.10 + intensity*0.05);
+  const cx = 0.5 + (Math.random()* (xMax-xMin) + xMin - 0.5) * (1 - towardCenter);
+  const cy = 0.5 + (Math.random()* (yMax-yMin) + yMin - 0.5) * (1 - towardCenter);
+
+  // jitter so they don't overlap exactly
+  const jitterX = (Math.random()-0.5) * 0.12;
+  const jitterY = (Math.random()-0.5) * 0.10;
+
+  const x = r.left + r.width  * clamp01(cx + jitterX);
+  const y = r.top  + r.height * clamp01(cy + jitterY);
+  return { x, y };
+}
+
 function escalatePopups(i){
   const intensity = i + 1;
-  const n = (intensity>=3?1:0) + (intensity>=4?1:0) + (intensity>=5?2:0) + (intensity>=6?4:0);
+  // number of popups ramps up
+  const n = (intensity>=3?2:0) + (intensity>=4?2:0) + (intensity>=5?3:0) + (intensity>=6?4:0);
   for (let k=0; k<n; k++){
-    setTimeout(()=> spawnPopup(intensity, k===0), k*120);
+    setTimeout(()=> spawnPopup(intensity, k===0), k*110);
   }
 }
+
 function spawnPopup(intensity=1, scare=false){
   const p = document.createElement('div');
   p.className = 'popup' + (scare ? ' scare' : '');
@@ -158,13 +185,12 @@ function spawnPopup(intensity=1, scare=false){
     `<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
      <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
 
-  const r = ghostLayer.getBoundingClientRect();
-  const bias = Math.max(0.5 - intensity*0.08, 0.12);
-  const cx = r.left + r.width  * (0.5 + (Math.random()*bias*2 - bias));
-  const cy = r.top  + r.height * (0.5 + (Math.random()*bias*2 - bias));
-  p.style.left = `${cx}px`;
-  p.style.top  = `${cy}px`;
+  // distributed position
+  const pos = popupPosition(intensity, Math.floor(Math.random()*1000));
+  p.style.left = `${pos.x}px`;
+  p.style.top  = `${pos.y}px`;
 
+  // scale/rotation escalate
   p.style.setProperty('--popupScale', (1 + intensity*0.26).toFixed(2));
   p.style.setProperty('--rot', `${(Math.random()*6 - 3) * (1 + intensity*0.12)}deg`);
 
@@ -172,37 +198,28 @@ function spawnPopup(intensity=1, scare=false){
   setTimeout(()=> p.remove(), 2600 + intensity*450);
 }
 
-/* ====== GLITCHY RED END (no white lines) ====== */
+/* ===== END TRANSITION ===== */
 function endTransition(){
-  // 1) red jitter
   glitchEl.classList.remove('hidden'); 
   glitchEl.classList.add('on');
 
-  // 2) blocky tear artifacts
   blocksEl.classList.remove('hidden');
   spawnBlocks(20);
 
-  // 3) rgb split hit
   setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
-
-  // 4) red pulse burst
   setTimeout(()=>{ crashEl.classList.remove('hidden'); crashEl.classList.add('on'); }, 360);
-
-  // 5) long red wash
   setTimeout(()=>{ redwashEl.classList.remove('hidden'); redwashEl.classList.add('on'); }, 560);
 
-  // 6) hide UI → reveal final line only
   setTimeout(()=>{
     wrap.classList.add('endmode');
     endScreen.classList.remove('hidden');
     requestAnimationFrame(()=> endScreen.classList.add('show'));
   }, 3600);
 
-  // 7) loop back
   setTimeout(()=> location.reload(), 10000);
 }
 
-/* helpers */
+/* ===== HELPERS ===== */
 function spawnBlocks(n=12){
   const r = blocksEl.getBoundingClientRect();
   for (let i=0;i<n;i++){
@@ -224,3 +241,4 @@ function spawnBlocks(n=12){
 }
 function rand(min,max){ return min + Math.random()*(max-min) }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function clamp01(v){ return Math.max(0, Math.min(1, v)); }
