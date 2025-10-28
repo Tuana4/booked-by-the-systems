@@ -12,14 +12,15 @@ const blocksEl   = document.getElementById('blocks');
 const crashEl    = document.getElementById('crash');
 const endScreen  = document.getElementById('end');
 const cursorEl   = document.getElementById('cursor');
+const agreeSound = document.getElementById('agreeSound'); // 🔊 added
 
+// 🔊 sound helper
 function playAgree() {
   if (!agreeSound) return;
   try {
-    // clone so rapid clicks can overlap without cutting off
-    const s = agreeSound.cloneNode(true);
-    s.volume = 0.5;      // tweak if needed (0.0–1.0)
-    s.play().catch(()=>{}); // ignore if the browser blocks
+    const s = agreeSound.cloneNode(true); // allow rapid overlaps
+    s.volume = 0.5;
+    s.play().catch(()=>{});
   } catch(e){}
 }
 
@@ -35,7 +36,7 @@ const phrases = [
   "I AGREE TO THE SYSTEM",
   "I AGREE TO YOUR TERMS",
   "I AGREE TO ALL FUTURE AGREEMENTS",
-  "I AGREE WITHOUT READING", 
+  "I AGREE WITHOUT READING"
 ];
 
 /* red burst vocab (escalates) */
@@ -75,6 +76,8 @@ document.addEventListener('mousemove', (e)=>{
 /* main interaction */
 cb.addEventListener('change', ()=>{
   if (!cb.checked) return;
+
+  playAgree(); // 🔊 play click
 
   flashBang();
   burstOnce(step);                 // red words (full-screen)
@@ -155,7 +158,6 @@ function spawnPopup(intensity=1, scare=false){
     `<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
      <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
 
-  // anywhere within full-bleed layer; drift toward center as intensity rises
   const r = ghostLayer.getBoundingClientRect();
   const bias = Math.max(0.5 - intensity*0.08, 0.12);
   const cx = r.left + r.width  * (0.5 + (Math.random()*bias*2 - bias));
@@ -178,7 +180,7 @@ function endTransition(){
 
   // 2) blocky tear artifacts
   blocksEl.classList.remove('hidden');
-  spawnBlocks(20); // tweak count if you want more/less
+  spawnBlocks(20);
 
   // 3) rgb split hit
   setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
@@ -206,8 +208,8 @@ function spawnBlocks(n=12){
   for (let i=0;i<n;i++){
     const b = document.createElement('div');
     b.className = 'block';
-    const w = Math.random()*220 + 80;   // 80–300px
-    const h = Math.random()*90  + 40;   // 40–130px
+    const w = Math.random()*220 + 80;
+    const h = Math.random()*90  + 40;
     const x = r.left + Math.random()*r.width  - w*0.5;
     const y = r.top  + Math.random()*r.height - h*0.5;
     b.style.width  = `${w}px`;
