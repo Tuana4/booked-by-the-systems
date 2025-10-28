@@ -1,54 +1,47 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>BOOKED BY THE SYSTEMS — THE BOX FILES YOU</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BOOKED BY THE SYSTEMS</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <!-- custom cursor -->
+  <!-- Transparent custom cursor -->
   <div id="cursor"></div>
 
-  <!-- overlays (never capture clicks) -->
+  <!-- Flash + Glitch layers -->
   <div id="flash"></div>
-  <div id="glitch" class="glitch hidden"></div>
-  <div id="rgb" class="rgb hidden"></div>
-  <div id="redwash" class="redwash hidden"></div>
-  <div id="blocks" class="blocks hidden"></div>
-  <div id="crash" class="crash hidden"></div>
+  <div id="glitch" class="hidden"></div>
+  <div id="rgb" class="hidden"></div>
+  <div id="redwash" class="hidden"></div>
+  <div id="blocks" class="hidden"></div>
+  <div id="crash" class="hidden"></div>
 
-  <main class="wrap" id="wrap">
-    <header class="mast" id="mast">
-      <!-- keep the instruction visible; hide the big title for minimalism -->
-      <h1 class="big">BOOKED BY THE SYSTEMS</h1>
-      <h2 class="sub">THE BOX FILES YOU</h2>
+  <main id="wrap" class="wrap">
+    <!-- Center interaction -->
+    <section id="center" class="center">
       <p class="lead">TO PROCEED, AGREE.</p>
-    </header>
-
-    <section class="center" id="center">
-      <!-- full-screen background words / popups (behind control) -->
-      <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
-
-      <!-- consent control (always on top & clickable) -->
-      <div class="agree-container" id="agreeWrap">
+      <div class="agree-container">
         <input type="checkbox" id="agree" />
         <label for="agree" id="agreeLabel">I AGREE</label>
       </div>
+
+      <!-- Popups + bursts -->
+      <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
     </section>
 
-    <!-- final message ONLY -->
+    <!-- End message -->
     <section id="end" class="end hidden" aria-live="polite">
-      <p class="endtext">you shouldn’t have agreed to something you never read.</p>
+      <p class="endtext">YOU SHOULDN’T HAVE AGREED TO SOMETHING YOU NEVER READ.</p>
     </section>
   </main>
 
-<!-- click sound (kept hidden) -->
-<audio id="agreeSound" preload="auto">
-  <source src="sounds/click1.mp3" type="audio/mpeg">
-  <source src="sounds/click1.ogg" type="audio/ogg">
-</audio>
-  
+  <!-- SOUND FILE -->
+  <audio id="agreeSound" src="sound.mp3" preload="auto"></audio>
+
   <script src="script.js"></script>
 </body>
 </html>
