@@ -12,10 +12,11 @@ const blocksEl   = document.getElementById('blocks');
 const crashEl    = document.getElementById('crash');
 const endScreen  = document.getElementById('end');
 const cursorEl   = document.getElementById('cursor');
+const agreeSound = document.getElementById('agreeSound'); // 🔊
 
 /* LONGER “I AGREE …” sequence (same size/position) */
 const phrases = [
- "I AGREE",
+  "I AGREE",
   "I STILL AGREE",
   "I CONTINUE TO AGREE",
   "I AGREE AGAIN",
@@ -40,6 +41,16 @@ const burstsByStep = [
 
 let step = 0;
 label.textContent = phrases[step];
+
+/* sound */
+function playSound(){
+  try{
+    if(!agreeSound) return;
+    const s = agreeSound.cloneNode(true); // allow fast overlaps
+    s.volume = 0.6;
+    s.play().catch(()=>{});
+  }catch(e){}
+}
 
 /* guarantee label toggles checkbox even if overlapped */
 label.addEventListener('click', (e)=>{
@@ -66,10 +77,11 @@ document.addEventListener('mousemove', (e)=>{
 cb.addEventListener('change', ()=>{
   if (!cb.checked) return;
 
+  playSound();            // 🔊 play click
   flashBang();
-  burstOnce(step);                 // red words (full-screen)
+  burstOnce(step);        // red words (full-screen)
 
-  // First two clicks: subtle (no popups). From 3rd click: escalate.
+  // First two clicks: subtle (no popups). From 3rd click: escalate count only.
   if (step >= 2) escalatePopups(step);
 
   cb.disabled = true;
@@ -80,7 +92,7 @@ cb.addEventListener('change', ()=>{
       cb.checked = false;
       cb.disabled = false;
     } else {
-      endTransition();             // red system crash → final line
+      endTransition();    // red system crash → final line
     }
   }, 260);
 });
@@ -123,17 +135,20 @@ function spawnGhost(rect, text, dur=1300, scale=1){
   setTimeout(()=> g.remove(), dur + 150);
 }
 
-/* popups behind control — start at step 3, then escalate */
+/* popups behind control — start at step 3, then ESCALATE COUNT ONLY (no size change) */
 function escalatePopups(i){
   const intensity = i + 1;
-  const n = (intensity>=3?1:0) + (intensity>=4?1:0) + (intensity>=5?2:0) + (intensity>=6?4:0);
+  const n = Math.min(4 + intensity * 2, 18); // more popups as it escalates
   for (let k=0; k<n; k++){
-    setTimeout(()=> spawnPopup(intensity, k===0), k*120);
+    setTimeout(()=> spawnPopup(), k*120);
   }
 }
-function spawnPopup(intensity=1, scare=false){
+
+/* constant-size popups spread around screen */
+function spawnPopup(){
   const p = document.createElement('div');
-  p.className = 'popup' + (scare ? ' scare' : '');
+  p.className = 'popup';
+
   const payloads = [
     ["CONSENT UPDATE","Improved privacy experience available.","CLICK AGREE TO ACTIVATE."],
     ["SYSTEM NOTICE","INSTALL TRUST PACK TO CONTINUE.","[ ACCEPT ]   [ ACCEPT ]"],
@@ -145,19 +160,21 @@ function spawnPopup(intensity=1, scare=false){
     `<div class="pophead"><span>${title}</span><button class="popx" aria-label="close">X</button></div>
      <div class="popbody"><div>${l1}</div><div style="margin-top:8px;color:#ffbfbf">${l2}</div></div>`;
 
-  // anywhere within full-bleed layer; drift toward center as intensity rises
+  // distribute anywhere in the ghostLayer with padding from edges
   const r = ghostLayer.getBoundingClientRect();
-  const bias = Math.max(0.5 - intensity*0.08, 0.12);
-  const cx = r.left + r.width  * (0.5 + (Math.random()*bias*2 - bias));
-  const cy = r.top  + r.height * (0.5 + (Math.random()*bias*2 - bias));
-  p.style.left = `${cx}px`;
-  p.style.top  = `${cy}px`;
+  const padX = r.width * 0.08;
+  const padY = r.height * 0.08;
+  const x = r.left + padX + Math.random()*(r.width  - padX*2);
+  const y = r.top  + padY + Math.random()*(r.height - padY*2);
 
-  p.style.setProperty('--popupScale', (1 + intensity*0.26).toFixed(2));
-  p.style.setProperty('--rot', `${(Math.random()*6 - 3) * (1 + intensity*0.12)}deg`);
+  p.style.left = `${x}px`;
+  p.style.top  = `${y}px`;
+
+  // keep constant size; only tiny random rotation for life
+  p.style.setProperty('--rot', `${(Math.random()*6 - 3)}deg`);
 
   ghostLayer.appendChild(p);
-  setTimeout(()=> p.remove(), 2600 + intensity*450);
+  setTimeout(()=> p.remove(), 2800);
 }
 
 /* ====== GLITCHY RED END (no white lines) ====== */
@@ -168,7 +185,7 @@ function endTransition(){
 
   // 2) blocky tear artifacts
   blocksEl.classList.remove('hidden');
-  spawnBlocks(20); // tweak count if you want more/less
+  spawnBlocks(20);
 
   // 3) rgb split hit
   setTimeout(()=>{ rgbEl.classList.remove('hidden'); rgbEl.classList.add('on'); }, 220);
