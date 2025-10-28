@@ -19,7 +19,7 @@ body{
 /* FULL-SCREEN background layer (bleeds past edges, no clipping) */
 .ghostLayer{
   position: fixed;
-  inset: -14vh -10vw;   /* extend above/below/left/right so text can spill */
+  inset: -20vh -10vw;   /* extend above/below/left/right so text can spill */
   z-index: 1;
   pointer-events: none;
   overflow: visible;
@@ -78,7 +78,7 @@ body{
   background:#0b0b0b; border:2px solid #fff;
   box-shadow:0 14px 60px rgba(0,0,0,.9);
   z-index: 2; /* behind control */
-  transform:translate(-50%,-50%) scale(var(--popupScale,1)) rotate(var(--rot,0deg));
+  transform:translate(-50%,-50%) rotate(var(--rot,0deg)); /* constant size */
   animation:popIn .16s ease forwards;
   pointer-events:none;
   font-family: inherit;
@@ -95,7 +95,6 @@ body{
 .popbody{ padding:14px 12px; color:#fff; font-size:clamp(11px,2vw,14px); line-height:1.35 }
 
 /* ====== ENDING: red system crash (no white lines) ====== */
-/* red jitter (no stripes) */
 .glitch{
   position:fixed; inset:0; z-index:35; pointer-events:none;
   background: rgba(255,0,0,.08);
