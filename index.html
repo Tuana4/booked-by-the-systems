@@ -10,7 +10,7 @@
   <!-- custom cursor -->
   <div id="cursor"></div>
 
-  <!-- red + glitch layers -->
+  <!-- effect layers -->
   <div id="flash"></div>
   <div id="glitch" class="hidden"></div>
   <div id="rgb" class="hidden"></div>
@@ -28,15 +28,17 @@
         <input type="checkbox" id="agree" />
         <label id="agreeLabel" for="agree">I AGREE</label>
       </div>
-      <div id="ghostLayer" class="ghostLayer"></div>
+
+      <!-- bursts & popups (behind control, full-bleed) -->
+      <div id="ghostLayer" class="ghostLayer" aria-hidden="true"></div>
     </section>
 
-    <section id="end" class="end hidden">
+    <section id="end" class="end hidden" aria-live="polite">
       <p class="endtext">YOU SHOULDN’T HAVE AGREED TO SOMETHING YOU NEVER READ.</p>
     </section>
   </main>
 
-  <!-- click sound -->
+  <!-- click sound (place sound.mp3 next to this file) -->
   <audio id="agreeSound" src="sound.mp3" preload="auto"></audio>
 
   <script src="script.js"></script>
