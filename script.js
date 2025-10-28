@@ -15,7 +15,7 @@ const cursorEl   = document.getElementById('cursor');
 
 /* LONGER “I AGREE …” sequence (same size/position) */
 const phrases = [
-  "I AGREE",
+ "I AGREE",
   "I STILL AGREE",
   "I CONTINUE TO AGREE",
   "I AGREE AGAIN",
