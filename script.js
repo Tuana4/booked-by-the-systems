@@ -227,3 +227,5 @@ function spawnBlocks(n=12){
     setTimeout(()=> b.remove(), 1100 + Math.random()*400);
   }
 }
+function rand(min,max){ return min + Math.random()*(max-min) }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
