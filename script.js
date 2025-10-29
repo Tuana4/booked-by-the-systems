@@ -151,7 +151,7 @@ function spawnPopup(){
 
   const payloads = [
     ["CONSENT UPDATE","Improved privacy experience available.","CLICK AGREE TO ACTIVATE."],
-    ["SYSTEM NOTICE","INSTALL TRUST PACK TO CONTINUE.","[ ACCEPT ]],
+    ["SYSTEM NOTICE","INSTALL TRUST PACK TO CONTINUE.","[ ACCEPT ]   [ ACCEPT ]"],
     ["SECURITY CHECK","UNUSUAL ACTIVITY DETECTED.","VERIFY IDENTITY BY AGREEING AGAIN."],
     ["OPTIMISER","WE CAN MAKE THIS FASTER.","ENABLE AUTOMATIC AGREEMENT."]
   ];
@@ -227,5 +227,3 @@ function spawnBlocks(n=12){
     setTimeout(()=> b.remove(), 1100 + Math.random()*400);
   }
 }
-function rand(min,max){ return min + Math.random()*(max-min) }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
