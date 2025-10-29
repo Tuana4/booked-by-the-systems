@@ -190,3 +190,4 @@ body{ cursor:none !important }
 /* FINAL SAFETY: overlays never block clicks; control always wins */
 #flash, #ghostLayer, .ghost, .popup, #glitch, #rgb, #redwash, #blocks, #crash { pointer-events: none !important; }
 .agree-container, #agree, #agreeLabel { position: relative !important; z-index: 9999 !important; pointer-events: auto !important; }
+
